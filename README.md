@@ -26,9 +26,10 @@ cd /opt
 sudo wget -c https://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.8.0/kuber$
 sudo tar zxf kubernetes
 export PATH=/opt/kubernetes/platforms/darwin/amd64:$PATH
+export KUBERNETES_MASTER=http://172.17.8.101:8080
 ```
 
-## Bootstrap master
+## Master
 
 Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes master.
 ```
@@ -46,7 +47,7 @@ MACHINE		IP		METADATA
 dd0ee115...	172.17.8.101	role=master
 ```
 
-## Bootstrap minions
+## Minions
 
 Current ```Vagrantfile``` will bootstrap two VMs with everything needed to have two Kubernetes minions. You can change this by editing ```Vagrantfile```.
 
@@ -55,7 +56,7 @@ vagrant up node-01
 vagrant up node-02
 ```
 
-Verify ```fleet```again, just for the sake of it
+Verify ```fleet``` again, just for the sake of it
 ```
 fleetctl list-machines
 ```
@@ -65,9 +66,11 @@ You should see something like
 MACHINE		IP		METADATA
 dd0ee115...	172.17.8.101	role=master
 74a8dc8c...	172.17.8.102	role=kubernetes
-c93da9ff...     172.17.8.103    role=kubernetes
+c93da9ff...	172.17.8.103    role=kubernetes
 ```
 
 ## Usage
 
-You're now ready to use your Kubernetes cluster. If you just want to test something simple, start with [Kubernetes examples](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/).
+You're now ready to use your Kubernetes cluster.
+
+If you just want to test something simple, start with [Kubernetes examples](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/).
