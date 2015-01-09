@@ -1,5 +1,5 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes cluster (for testing purposes) made easy with Vagrant and CoreOS.
+Kubernetes (0.8.0) cluster made easy with Vagrant (1.7.2+) and CoreOS.
 
 ## Pre-requisites
  
