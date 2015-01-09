@@ -33,7 +33,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /opt/bin
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/flanneld
         ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
-        ExecStart=/opt/bin/flanneld -etcd-endpoints http://172.17.8.101:4001
+        ExecStart=/opt/bin/flanneld --iface=eth1 --etcd-endpoints http://172.17.8.101:4001
     - name: docker.service
       command: start
       content: |

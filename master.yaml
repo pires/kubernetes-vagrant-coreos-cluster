@@ -80,7 +80,7 @@ coreos:
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/flanneld
         ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
         ExecStartPre=-/usr/bin/etcdctl mk /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "vxlan"}}'
-        ExecStart=/opt/bin/flanneld
+        ExecStart=/opt/bin/flanneld --iface=eth1
     - name: kube-apiserver.service
       command: start
       content: |
@@ -97,7 +97,7 @@ coreos:
         ExecStart=/opt/bin/kube-apiserver \
         --address=0.0.0.0 \
         --port=8080 \
-        --portal_net 10.1.0.0/16 \
+        --portal_net 10.244.0.0/16 \
         --etcd_servers=http://127.0.0.1:4001 \
         --public_address_override=172.17.8.101 \
         --logtostderr=true
