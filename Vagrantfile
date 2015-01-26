@@ -90,6 +90,7 @@ Vagrant.configure("2") do |config|
 
     # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
     #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+    config.vm.synced_folder ".", "/vagrant", disabled: true
 
     if File.exist?(MASTER_YAML)
       config.vm.provision :file, :source => "#{MASTER_YAML}", :destination => "/tmp/vagrantfile-user-data"
@@ -141,6 +142,7 @@ Vagrant.configure("2") do |config|
 
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
       #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+      config.vm.synced_folder ".", "/vagrant", disabled: true
 
       if File.exist?(NODE_YAML)
         config.vm.provision :file, :source => "#{NODE_YAML}", :destination => "/tmp/vagrantfile-user-data"
