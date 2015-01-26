@@ -25,10 +25,6 @@ if ENV["NUM_INSTANCES"].to_i > 0 && ENV["NUM_INSTANCES"]
 end
 
 Vagrant.configure("2") do |config|
-  config.push.define "atlas" do |push|
-    push.app = "pires/kubernetes-vagrant-coreos-cluster"
-  end
-
   # always use Vagrants insecure key
   config.ssh.insert_key = false
 
