@@ -1,5 +1,5 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes (0.8.1) cluster made easy with Vagrant (1.7.2+) and CoreOS.
+Kubernetes (0.9.1) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha.
 
 ## Pre-requisites
  
@@ -23,7 +23,7 @@ export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
 On Mac OS
 ```
 cd /opt
-sudo wget -c https://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.8.1/kubernetes.tar.gz
+sudo wget -c https://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.9.1/kubernetes.tar.gz
 sudo tar zxf kubernetes.tar.gz
 export PATH=/opt/kubernetes/platforms/darwin/amd64:$PATH
 export KUBERNETES_MASTER=http://172.17.8.101:8080
