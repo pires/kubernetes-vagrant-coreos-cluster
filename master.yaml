@@ -122,7 +122,7 @@ coreos:
         ExecStart=/opt/bin/kube-apiserver \
         --address=0.0.0.0 \
         --port=8080 \
-        --portal_net 10.244.0.0/16 \
+        --portal_net=10.244.0.0/16 \
         --etcd_servers=http://127.0.0.1:4001 \
         --public_address_override=172.17.8.101 \
         --logtostderr=true
