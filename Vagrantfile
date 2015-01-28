@@ -48,14 +48,14 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  config.vm.define vm_name = "master" do |config|
-    config.vm.hostname = vm_name
+  config.vm.define vm_master_name = "master" do |config|
+    config.vm.hostname = vm_master_name
 
     if $enable_serial_logging
       logdir = File.join(File.dirname(__FILE__), "log")
       FileUtils.mkdir_p(logdir)
 
-      serialFile = File.join(logdir, "%s-serial.txt" % vm_name)
+      serialFile = File.join(logdir, "%s-serial.txt" % vm_master_name)
       FileUtils.touch(serialFile)
 
       config.vm.provider :vmware_fusion do |v, override|
@@ -100,14 +100,14 @@ Vagrant.configure("2") do |config|
   end
 
   (1..$num_node_instances).each do |i|
-    config.vm.define vm_name = "node-%02d" % i do |config|
-      config.vm.hostname = vm_name
+    config.vm.define vm_node_name = "node-%02d" % i do |config|
+      config.vm.hostname = vm_node_name
 
       if $enable_serial_logging
         logdir = File.join(File.dirname(__FILE__), "log")
         FileUtils.mkdir_p(logdir)
 
-        serialFile = File.join(logdir, "%s-serial.txt" % vm_name)
+        serialFile = File.join(logdir, "%s-serial.txt" % vm_node_name)
         FileUtils.touch(serialFile)
 
         config.vm.provider :vmware_fusion do |v, override|
