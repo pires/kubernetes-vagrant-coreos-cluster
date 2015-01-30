@@ -1,5 +1,6 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes (0.9.1) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha.
+Kubernetes (latest) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha.
+It will automaticly grab the lastest kubernetes version on every boot.
 
 ## Pre-requisites
  
@@ -23,7 +24,7 @@ export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
 On Mac OS
 ```
 cd /opt
-sudo wget -c https://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.9.1/kubernetes.tar.gz
+sudo wget -c http://github.com/GoogleCloudPlatform/kubernetes/releases/download/$(curl --insecure -sS https://get.k8s.io | grep release= | cut -f2 -d"=")/kubernetes.tar.gz
 sudo tar zxf kubernetes.tar.gz
 export PATH=/opt/kubernetes/platforms/darwin/amd64:$PATH
 export KUBERNETES_MASTER=http://172.17.8.101:8080
