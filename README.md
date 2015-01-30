@@ -1,5 +1,5 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes (0.9.1) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha.
+Kubernetes (0.9.2) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha.
 
 ## Pre-requisites
  
