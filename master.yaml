@@ -87,6 +87,24 @@ coreos:
         ExecStart=/usr/bin/bash /opt/bin/waiter.sh
         RemainAfterExit=true
         Type=oneshot
+    - name: docker-cache.service
+      command: start
+      content: |
+        [Unit]
+        Description=Docker cache proxy
+        Wants=network-online.target
+        Wants=docker.service
+        After=docker.service
+        After=docker-online.target
+
+        [Service]
+        ExecStart=/usr/bin/docker run --net host -d --name docker-registry \
+        -e STANDALONE=false \
+        -e MIRROR_SOURCE=https://registry-1.docker.io \
+        -e MIRROR_SOURCE_INDEX=https://index.docker.io \
+        registry
+        RemainAfterExit=true
+        Type=oneshot
     - name: flannel.service
       command: start
       content: |
@@ -106,6 +124,22 @@ coreos:
         ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
         ExecStartPre=-/usr/bin/etcdctl mk /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "vxlan"}}'
         ExecStart=/opt/bin/flanneld --iface=eth1
+    - name: docker.service
+      command: start
+      content: |
+        [Unit]
+        After=flannel.service
+        Wants=flannel.service
+        Description=Docker Application Container Engine
+        Documentation=http://docs.docker.io
+
+        [Service]
+        EnvironmentFile=/run/flannel/subnet.env
+        ExecStartPre=/bin/mount --make-rprivate /
+        ExecStart=/usr/bin/docker -d --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} -s=overlay -H fd://
+
+        [Install]
+        WantedBy=multi-user.target
     - name: kube-apiserver.service
       command: start
       content: |
