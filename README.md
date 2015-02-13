@@ -1,5 +1,5 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes (0.10.1) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha (884.0.0).
+Kubernetes (0.10.1) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha (584.0.0).
 If you want to run the latest release available, please proceed with cloud-config files located in ```/latest```.
 
 ## Pre-requisites
