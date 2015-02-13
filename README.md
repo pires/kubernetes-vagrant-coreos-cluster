@@ -1,5 +1,5 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes (0.9.2) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha (591.0.0).
+Kubernetes (0.9.3) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha (591.0.0).
 If you want to run the latest release available, please proceed with cloud-config files located in ```/latest```.
 
 ## Pre-requisites
@@ -21,7 +21,7 @@ export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
 
 ### kubectl
 
-Get release 0.9.2:
+Get release 0.9.3:
 ```
 cd /opt
 sudo wget -c http://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.9.2/kubernetes.tar.gz
