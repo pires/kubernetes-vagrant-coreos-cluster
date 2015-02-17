@@ -1,5 +1,5 @@
 # -*- mode: ruby -*-
-# # vi: set ft=ruby :
+# vi: set ft=ruby :
 
 require 'fileutils'
 
