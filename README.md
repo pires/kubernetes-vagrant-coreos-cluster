@@ -3,8 +3,8 @@ Kubernetes (0.9.3) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha (591
 If you want to run the latest release available, please proceed with cloud-config files located in ```/latest```.
 
 ## Pre-requisites
- 
- * Virtualbox
+
+ * Virtualbox or Parallels Desktop
  * Vagrant
  * ```kubectl```
  * ```fleetctl``` (optional for debugging Fleet)
@@ -24,7 +24,7 @@ export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
 Get release 0.9.3:
 ```
 cd /opt
-sudo wget -c http://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.9.2/kubernetes.tar.gz
+sudo wget -c http://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.9.3/kubernetes.tar.gz
 sudo tar zxf kubernetes.tar.gz
 ```
 
@@ -87,6 +87,11 @@ dd0ee115...	172.17.8.101	role=master
 74a8dc8c...	172.17.8.102	role=kubernetes
 c93da9ff...	172.17.8.103    role=kubernetes
 ```
+
+## Parallels Desktop support
+
+if you are using Parallels Desktop and the [vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/) provider
+just add ```--provider parallels``` to the ```vagrant up`` invocations above
 
 ## Usage
 
