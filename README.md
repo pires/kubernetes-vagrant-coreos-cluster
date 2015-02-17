@@ -91,7 +91,7 @@ c93da9ff...	172.17.8.103    role=kubernetes
 ## Parallels Desktop support
 
 if you are using Parallels Desktop and the [vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/) provider
-just add ```--provider parallels``` to the ```vagrant up`` invocations above
+just add ```--provider parallels``` to the ```vagrant up``` invocations above
 
 ## Usage
 
