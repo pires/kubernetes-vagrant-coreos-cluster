@@ -76,7 +76,18 @@ All aspects of your cluster setup can be customized with environment variables. 
  - **NUM_INSTANCES** will set the number of nodes (minions).
    If unset defaults to 2
  - **UPDATE_CHANNEL** will set the default CoreOS channel to be used in the VMs.
-   The default is the **alpha** channel (alternatives are **stable** and **beta**).
+   The default is the **alpha** channel (alternatives would be **stable** and **beta**).
+
+   > Please do note that as kubernetes is a fastly evolving technology **CoreOS' _alpha_
+   > channel is the only one expected to behave reliably**. While, by convenience, we allow
+   > one to invoke the _beta_ or _stable_ channels please be aware that your mileage
+   > when consuming them may vary a whole lot.
+   >
+   > So, **before submitting a bug**, in [this](https://github.com/coreos/bugs/issues) project,
+   > or upstream (either [kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues)
+   > or [CoreOS](https://github.com/coreos/bugs/issues))
+   > please **make sure it** (also) **happens in the** (default) **_alpha_ channel** :smile:
+   >
  - **COREOS_VERSION** will set the specific CoreOS release (from the set channel) to be used.
    The default is to use whatever is the latest one from the given channel.
  - **SERIAL_LOGGING** if set to true will allow logging from the VMs serial console.
