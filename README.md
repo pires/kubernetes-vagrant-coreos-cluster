@@ -10,43 +10,19 @@ If you want to run the latest release available, please proceed with cloud-confi
  * ```fleetctl``` (optional for debugging Fleet)
  * ```etcdctl``` (optional for debugging Etcd)
 
-### fleetctl, etcdctl
+### fleetctl, etcdctl, kubectl
 
-On Mac OS
+On Mac OS, do, in advance
 ```
 brew install wget fleetctl etcdctl
-export ETCDCTL_PEERS=http://172.17.8.101:4001
-export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
 ```
 
-### kubectl
+Then run ```./kubLocalInstall install``` to download 'kubectl' binary (into /usr/local/bin which should be already in your default $PATH). You can also install a specific kubectl version via the KUBERNETES_VERSION environment variable.
 
-Get release 0.9.3:
-```
-cd /opt
-sudo wget -c http://github.com/GoogleCloudPlatform/kubernetes/releases/download/v0.9.3/kubernetes.tar.gz
-sudo tar zxf kubernetes.tar.gz
-```
+Finally, just run ```$(./kubLocalInstall shellinit)``` to set all needed environment variables for you, on your running shell.
 
-Set ```PATH``` in Mac OS:
-```
-export PATH=/opt/kubernetes/platforms/darwin/amd64:$PATH
-```
-
-Set ```PATH``` in Linux:
-```
-export PATH=/opt/kubernetes/platforms/linux/amd64:$PATH
-```
-
-Now, tell ```kubectl``` where it can find Kubernetes API:
-```
-export KUBERNETES_MASTER=http://172.17.8.101:8080
-```
-
-In case you went with the latest version available of Kubernetes, replace the ```wget``` line with:
-```
-sudo wget -c http://github.com/GoogleCloudPlatform/kubernetes/releases/download/$(curl --insecure -sS https://get.k8s.io | grep release= | cut -f2 -d"=")/kubernetes.tar.gz
-```
+> to see the environment variables ```$(./kubLocalInstall shellinit)``` sets in the
+> running shell just call ```./kubLocalInstall shellinit```
 
 ## Master
 
@@ -125,3 +101,7 @@ UPDATE_CHANNEL=stable vagrant up
 You're now ready to use your Kubernetes cluster.
 
 If you just want to test something simple, start with [Kubernetes examples](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/).
+
+## Licensing
+
+This work is [open source](http://opensource.org/osd), and is licensed under the [Apache License, Version 2.0](http://opensource.org/licenses/Apache-2.0).
