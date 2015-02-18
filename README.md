@@ -21,6 +21,9 @@ Then run ```./kubLocalInstall install``` to download 'kubectl' binary (into /usr
 
 Finally, just run ```$(./kubLocalInstall shellinit)``` to set all needed environment variables for you, on your running shell.
 
+> to see the environment variables ```$(./kubLocalInstall shellinit)``` sets in the
+> running shell just call ```./kubLocalInstall shellinit```
+
 ## Master
 
 Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes master.
