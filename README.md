@@ -125,3 +125,7 @@ UPDATE_CHANNEL=stable vagrant up
 You're now ready to use your Kubernetes cluster.
 
 If you just want to test something simple, start with [Kubernetes examples](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/).
+
+## Licensing
+
+This work is [open source](http://opensource.org/osd), and is licensed under the [Apache License, Version 2.0](http://opensource.org/licenses/Apache-2.0).
