@@ -29,7 +29,7 @@ end
 
 if $kubernetes_version == "latest"
   url = "https://get.k8s.io"
-  puts open(url).read().scan(/release=.*/)[0].gsub('release=v', '')
+  $kubernetes_version = open(url).read().scan(/release=.*/)[0].gsub('release=v', '')
 end
 
 Vagrant.configure("2") do |config|
