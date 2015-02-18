@@ -30,7 +30,7 @@ esac
 if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
   echo "Installing ${PLATFORM} version of kubecfg (kubernetes cli) in ${targetDir}"
   [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
-  [ -f ${targetDir}/kubecfg ] || sudo wget -O /usr/local/bin/kubecfg "${KUB_URL}" &>/dev/null
+  [ -f ${targetDir}/kubecfg ] || sudo wget -O ${targetDir}/kubecfg "${KUB_URL}" &>/dev/null
   [ -x ${targetDir}/kubecfg ] || sudo chmod +x ${targetDir}/kubecfg
 elif [[ "$#" -eq 1 && "$1" == "-rm"  ]] ; then
   [ -f ${targetDir}/kubecfg ] && sudo rm -f ${targetDir}/kubecfg
