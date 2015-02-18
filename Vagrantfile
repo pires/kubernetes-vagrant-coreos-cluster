@@ -127,7 +127,7 @@ Vagrant.configure("2") do |config|
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
-          sed -i 's,__RELEASE__,#{$kubernetes_version},g' /tmp/vagrantfile-user-data
+          sed -i 's,__RELEASE__,v#{$kubernetes_version},g' /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
