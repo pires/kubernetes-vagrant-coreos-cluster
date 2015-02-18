@@ -2,34 +2,41 @@
 # vi: set ft=ruby :
 
 require 'fileutils'
+require 'net/http'
+require 'open-uri'
 
 Vagrant.require_version ">= 1.6.0"
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
-# Defaults for config options defined in CONFIG
-$num_node_instances = 2
-$update_channel = "alpha"
-$enable_serial_logging = false
-$vb_gui = false
-$vb_master_memory = 512
-$vb_master_cpus = 1
-$vb_node_memory = 1024
-$vb_node_cpus = 1
+$num_node_instances = ENV['NUM_INSTANCES'] || 2
+$update_channel = ENV['CHANNEL'] || 'alpha'
+$coreos_version = ENV['COREOS_VERSION'] || 'latest'
+$enable_serial_logging = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
+$vb_gui = (ENV['GUI'].to_s.downcase == 'true')
+$vb_master_memory = ENV['MASTER_MEM'] || 512
+$vb_master_cpus = ENV['MASTER_CPUS'] || 1
+$vb_node_memory = ENV['NODE_MEM'] || 1024
+$vb_node_cpus = ENV['NODE_CPUS'] || 1
+$kubernetes_version = ENV['KUBERNETES_VERSION'] || '0.9.3'
 
-# Attempt to apply the deprecated environment variable NUM_INSTANCES to
-# $num_node_instances while allowing config.rb to override it
-if ENV["NUM_INSTANCES"].to_i > 0 && ENV["NUM_INSTANCES"]
-  $num_node_instances = ENV["NUM_INSTANCES"].to_i
+if $coreos_version == "latest"
+  url = "http://#{$update_channel}.release.core-os.net/amd64-usr/current/version.txt"
+  $coreos_version = open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', '')
+end
+
+if $kubernetes_version == "latest"
+  url = "https://get.k8s.io"
+  $kubernetes_version = open(url).read().scan(/release=.*/)[0].gsub('release=v', '')
 end
 
 Vagrant.configure("2") do |config|
-  # always use Vagrants insecure key
+  # always use Vagrants' insecure key
   config.ssh.insert_key = false
 
   config.vm.box = "coreos-%s" % $update_channel
-  config.vm.box_version = ">= 593.0.0"
+  config.vm.box_version = ">= #{$coreos_version}"
   config.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
 
   config.vm.provider :vmware_fusion do |vb, override|
@@ -117,7 +124,11 @@ Vagrant.configure("2") do |config|
 
       if File.exist?(cfg)
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
-        kHost.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
+        kHost.vm.provision :shell, :privileged => true,
+        inline: <<-EOF
+          sed -i 's,__RELEASE__,v#{$kubernetes_version},g' /tmp/vagrantfile-user-data
+          mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
+        EOF
       end
     end
   end
