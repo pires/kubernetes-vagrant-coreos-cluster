@@ -9,7 +9,7 @@ MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
 # Defaults for config options defined in CONFIG
-$num_node_instances = 3
+$num_node_instances = 2
 $update_channel = "alpha"
 $enable_serial_logging = false
 $vb_gui = false
