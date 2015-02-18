@@ -10,7 +10,6 @@ Vagrant.require_version ">= 1.6.0"
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
-# Defaults for config options defined in CONFIG
 $num_node_instances = ENV['NUM_INSTANCES'] || 2
 $update_channel = ENV['CHANNEL'] || 'alpha'
 $coreos_version = ENV['COREOS_VERSION'] || 'latest'
@@ -33,7 +32,7 @@ if $kubernetes_version == "latest"
 end
 
 Vagrant.configure("2") do |config|
-  # always use Vagrants insecure key
+  # always use Vagrants' insecure key
   config.ssh.insert_key = false
 
   config.vm.box = "coreos-%s" % $update_channel
