@@ -32,18 +32,18 @@ if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
   [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
   [ -f ${targetDir}/kubecfg ] || sudo wget -O ${targetDir}/kubecfg "${KUB_URL}" &>/dev/null
   [ -x ${targetDir}/kubecfg ] || sudo chmod +x ${targetDir}/kubecfg
-elif [[ "$#" -eq 1 && "$1" == "-rm"  ]] ; then
+elif [[ "$#" -eq 1 && "$1" == "uninstall"  ]] ; then
   [ -f ${targetDir}/kubecfg ] && sudo rm -f ${targetDir}/kubecfg
-elif
+elif [[ "$#" -eq 1 && "$1" == "shellinit"  ]] ; then
   if [[ ! -f ${targetDir}/kubecfg ]]; then
     echo "echo 'kubecfg' (kubernetes cli) wasn't found in your \$PATH."
     echo "Run './kubLocalSetup install' first."
     scream
   fi
-
-  [[ "$#" -eq 1 && "$1" == "shellinit"  ]] ; then
   echo "export ETCDCTL_PEERS=http://172.17.8.101:4001"
   echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001"
   echo "export KUBERNETES_MASTER=http://172.17.8.101:8080"
+else
+  echo "Usage: ./kubLocalSetup (install|shellinit|unistall)"
 fi
 
