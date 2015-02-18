@@ -1,0 +1,49 @@
+#!/bin/bash
+set -e
+
+PLATFORM="$(uname -s)"
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-0.9.3}
+[[ "${KUBERNETES_VERSION}" == "latest" ]] && \
+  KUBERNETES_VERSION=$(curl --insecure -sS https://get.k8s.io | grep release= | sed -e 's,.*=v,,')
+
+KUB_URL="https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/$( \
+  echo ${PLATFORM} | tr '[:upper:]' '[:lower:]')/amd64/kubecfg"
+
+scream () {
+    cat <<< "$@" 1>&2
+    exit 1
+}
+
+case "$PLATFORM" in
+  Darwin)
+    targetDir="/usr/local/bin"
+    ;;
+  Linux)
+    # targetDir="/opt/bin"
+    targetDir="/usr/local/bin"
+    ;;
+  *)
+    scream "Unknown or unsupported platform: ${PLATFORM}"
+    ;;
+esac
+
+if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
+  echo "Installing ${PLATFORM} version of kubecfg (kubernetes cli) in ${targetDir}"
+  [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
+  [ -f ${targetDir}/kubecfg ] || sudo wget -O /usr/local/bin/kubecfg "${KUB_URL}" &>/dev/null
+  [ -x ${targetDir}/kubecfg ] || sudo chmod +x ${targetDir}/kubecfg
+elif [[ "$#" -eq 1 && "$1" == "-rm"  ]] ; then
+  [ -f ${targetDir}/kubecfg ] && sudo rm -f ${targetDir}/kubecfg
+elif
+  if [[ ! -f ${targetDir}/kubecfg ]]; then
+    echo "echo 'kubecfg' (kubernetes cli) wasn't found in your \$PATH."
+    echo "Run './kubLocalSetup install' first."
+    scream
+  fi
+
+  [[ "$#" -eq 1 && "$1" == "shellinit"  ]] ; then
+  echo "export ETCDCTL_PEERS=http://172.17.8.101:4001"
+  echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001"
+  echo "export KUBERNETES_MASTER=http://172.17.8.101:8080"
+fi
+
