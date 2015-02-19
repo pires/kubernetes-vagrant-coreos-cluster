@@ -21,6 +21,16 @@ $vb_node_memory = ENV['NODE_MEM'] || 1024
 $vb_node_cpus = ENV['NODE_CPUS'] || 1
 $kubernetes_version = ENV['KUBERNETES_VERSION'] || '0.9.3'
 
+if $update_channel != 'alpha'
+	puts "============================================================================="
+	puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
+	puts "expected to behave reliably. While one can invoke the beta or stable channels"
+	puts "please be aware that your mileage may vary a whole lot."
+	puts "So, before submitting a bug, in this project, or upstream  (either kubernetes"
+	puts "or CoreOS) please make sure it (also) happens in the (default) alpha channel."
+	puts "============================================================================="
+end
+
 if $coreos_version == "latest"
   url = "http://#{$update_channel}.release.core-os.net/amd64-usr/current/version.txt"
   $coreos_version = open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', '')
