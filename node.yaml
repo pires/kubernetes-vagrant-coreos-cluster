@@ -16,7 +16,7 @@ coreos:
 
         [Service]
         Environment="FLEET_ETCD_SERVERS=http://172.17.8.101:4001"
-        Environment="FLEET_METADATA=role=kubernetes"
+        Environment="FLEET_METADATA=role=minion"
         ExecStart=/usr/bin/fleetd
         Restart=always
         RestartSec=10s

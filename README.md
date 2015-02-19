@@ -66,8 +66,8 @@ You should see something like
 ```
 MACHINE		IP		METADATA
 dd0ee115...	172.17.8.101	role=master
-74a8dc8c...	172.17.8.102	role=kubernetes
-c93da9ff...	172.17.8.103    role=kubernetes
+74a8dc8c...	172.17.8.102	role=minion
+c93da9ff...	172.17.8.103    role=minion
 ```
 
 ## Parallels Desktop support
