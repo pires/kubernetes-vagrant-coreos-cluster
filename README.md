@@ -1,11 +1,17 @@
 # kubernetes-vagrant-coreos-cluster
-Kubernetes (0.9.3) cluster made easy with Vagrant (1.7.2+) and CoreOS alpha (591.0.0).
-If you want to run the latest release available, please proceed with cloud-config files located in ```/latest```.
+**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently 0.9.3)
+cluster made easy with [Vagrant](https://www.vagrantup.com) (1.7.2+) and
+**[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
+
+> Please see [bellow](#Customization) for how to play with other CoreOS/kubernetes
+> combos, caveets included.
+
 
 ## Pre-requisites
 
- * Virtualbox or Parallels Desktop
- * Vagrant
+ * [Virtualbox](https://www.virtualbox.org) or
+ [Parallels Desktop](http://www.parallels.com/eu/products/desktop/)
+ * [Vagrant](https://www.vagrantup.com)
  * ```kubectl```
  * ```fleetctl``` (optional for debugging Fleet)
  * ```etcdctl``` (optional for debugging Etcd)
@@ -26,12 +32,12 @@ Finally, just run ```$(./kubLocalInstall shellinit)``` to set all needed environ
 
 ## Master
 
-Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes master.
+Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_.
 ```
 vagrant up master
 ```
 
-Verify ```fleet``` sees it
+Verify that ```fleet``` sees it
 ```
 fleetctl list-machines
 ```
@@ -71,12 +77,14 @@ just add ```--provider parallels``` to the ```vagrant up``` invocations above
 
 ## Customization
 
-All aspects of your cluster setup can be customized with environment variables. right now the available ones are:
+All aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
 
  - **NUM_INSTANCES** will set the number of nodes (minions).
-   If unset defaults to 2
+
+   > If unset defaults to 2
  - **UPDATE_CHANNEL** will set the default CoreOS channel to be used in the VMs.
-   The default is the **alpha** channel (alternatives would be **stable** and **beta**).
+
+   > The default is the **alpha** channel (alternatives would be **stable** and **beta**).
 
    > Please do note that as kubernetes is a fastly evolving technology **CoreOS' _alpha_
    > channel is the only one expected to behave reliably**. While, by convenience, we allow
@@ -88,23 +96,36 @@ All aspects of your cluster setup can be customized with environment variables. 
    > or [CoreOS](https://github.com/coreos/bugs/issues))
    > please **make sure it** (also) **happens in the** (default) **_alpha_ channel** :smile:
    >
- - **COREOS_VERSION** will set the specific CoreOS release (from the set channel) to be used.
-   The default is to use whatever is the latest one from the given channel.
- - **SERIAL_LOGGING** if set to true will allow logging from the VMs serial console.
-   It defaults to false. Only allow it if you *really* know what you are doing.
- - **MASTER_MEM** sets the master's VM memory. Defaults to 512 (MB)
- - **MASTER_CPUS** sets the number os vCPUs to be used by the master's VM. Defaults to 1.
- - **NODE_MEM** sets the minions's VM memory. Defaults to 1024 (MB)
- - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs. Defaults to 1.
- - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
- *If* the [world](http://google.com/about) was perfect we'd be using by default the latest and
- greatest one, as it [isn't](https://github.com/GoogleCloudPlatform/kubernetes/issues/4415)
- currently we are defaulting to 0.9.3.
+ - **COREOS_VERSION** will set the specific CoreOS release (from the given channel) to be used.
 
-So, in order to start, say, a cluster based on CoreOS's stable channel one just would do...
+   > The default is to use whatever is the latest one from the given channel.
+ - **SERIAL_LOGGING** if set to true will allow logging from the VMs serial console.
+
+   > It defaults to false. Only allow it if you *really* know what you are doing.
+ - **MASTER_MEM** sets the master's VM memory.
+
+   > Defaults to 512 (in MB)
+ - **MASTER_CPUS** sets the number os vCPUs to be used by the master's VM.
+
+   > Defaults to 1.
+ - **NODE_MEM** sets the worker nodes' (aka minions in kubernetes lingo) VM memory.
+
+   > Defaults to 1024 (in MB)
+ - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs.
+
+    > Defaults to 1.
+ - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
+
+   > *If* the [world](http://google.com/about) was perfect we'd be using by default the latest and
+   > greatest one, as it [isn't](https://github.com/GoogleCloudPlatform/kubernetes/issues/4415)
+   > currently we are defaulting to 0.9.3.
+
+
+
+So, in order to start, say, a kubernetes cluster with 3 nodes, 2GB of RAM and 2 vCPUs per node one just would do...
 
 ```
-UPDATE_CHANNEL=stable vagrant up
+NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
 ```
 
 ## Usage
