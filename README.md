@@ -3,7 +3,7 @@
 cluster made easy with [Vagrant](https://www.vagrantup.com) (1.7.2+) and
 **[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
 
-> Please see [bellow](#Customization) for how to play with other CoreOS/kubernetes
+> Please see [bellow](#customization) for how to play with other CoreOS/kubernetes
 > combos, caveats included.
 
 
