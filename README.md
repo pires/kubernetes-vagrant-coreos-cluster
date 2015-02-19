@@ -23,7 +23,7 @@ On Mac OS, do, in advance
 brew install wget fleetctl etcdctl
 ```
 
-Now, download the ```kubectl`` binary into ```/usr/local/bin```, which should be (and most probably is) set in your ```$PATH```:
+Now, download the ```kubectl``` binary into ```/usr/local/bin```, which should be (and most probably is) set in your ```$PATH```:
 ```
 ./kubLocalSetup install
 ```
