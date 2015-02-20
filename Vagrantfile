@@ -49,8 +49,10 @@ Vagrant.configure("2") do |config|
   config.vm.box_version = ">= #{$coreos_version}"
   config.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json" % $update_channel
 
-  config.vm.provider :vmware_fusion do |vb, override|
-    override.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant_vmware_fusion.json" % $update_channel
+  ["vmware_fusion", "vmware_workstation"].each do |vmware|
+    config.vm.provider vmware do |v, override|
+      override.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant_vmware_fusion.json" % $update_channel
+    end
   end
 
   config.vm.provider :parallels do |vb, override|
@@ -97,11 +99,13 @@ Vagrant.configure("2") do |config|
         serialFile = File.join(logdir, "%s-serial.txt" % vmName)
         FileUtils.touch(serialFile)
 
-        kHost.vm.provider :vmware_fusion do |v, override|
-          v.vmx["serial0.present"] = "TRUE"
-          v.vmx["serial0.fileType"] = "file"
-          v.vmx["serial0.fileName"] = serialFile
-          v.vmx["serial0.tryNoRxLoss"] = "FALSE"
+        ["vmware_fusion", "vmware_workstation"].each do |vmware|
+          kHost.vm.provider vmware do |v, override|
+            v.vmx["serial0.present"] = "TRUE"
+            v.vmx["serial0.fileType"] = "file"
+            v.vmx["serial0.fileName"] = serialFile
+            v.vmx["serial0.tryNoRxLoss"] = "FALSE"
+          end
         end
         kHost.vm.provider :virtualbox do |vb, override|
           vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
@@ -115,7 +119,7 @@ Vagrant.configure("2") do |config|
         end
       end
 
-      ["vmware_fusion", "virtualbox"].each do |h|
+      ["vmware_fusion", "vmware_workstation", "virtualbox"].each do |h|
         kHost.vm.provider h do |vb|
           vb.gui = $vb_gui
         end
