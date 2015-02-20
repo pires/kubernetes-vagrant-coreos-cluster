@@ -6,6 +6,7 @@ cluster made easy with [Vagrant](https://www.vagrantup.com) (1.7.2+) and
 > Please see [bellow](#customization) for how to play with other CoreOS/kubernetes
 > combos, caveats included.
 
+If you're lazy and in a hurry, jump to [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
@@ -23,7 +24,7 @@ On Mac OS, do, in advance
 brew install wget fleetctl etcdctl
 ```
 
-Now, download the ```kubectl``` binary into ```/usr/local/bin```, which should be (and most probably is) set in your ```$PATH```:
+Now, we will download the ```kubectl``` binary into ```/usr/local/bin```, which should be (and most probably is) set in your ```$PATH```:
 ```
 ./kubLocalSetup install
 ```
@@ -37,6 +38,11 @@ $(./kubLocalSetup shellinit)
 If you want to validate the environment variables we just set, run:
 ```
 ./kubLocalSetup shellinit
+```
+
+If you want to persist these changes to ```$PATH```, run:
+```
+$(./kubLocalSetup shellinit) >> ~/.bashrc
 ```
 
 ## Master
@@ -135,6 +141,27 @@ So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM
 
 ```
 NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
+```
+
+## TL;DR
+
+### Install kubectl
+
+```
+./kubLocalSetup install
+$(./kubLocalSetup shellinit)
+```
+
+### Set-up cluster
+
+```
+vagrant up master
+```
+
+Wait until ```master``` has finished downloading Kubernetes binaries and provisioned a Docker mirror cache. This could take some minutes depending on your Internet speed. After that, bring on a couple minions:
+
+```
+NODE_MEM=2048 NODE_CPUS=1 NUM_INSTANCES=2 vagrant up
 ```
 
 ## Usage
