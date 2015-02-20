@@ -76,7 +76,7 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  (1..$num_node_instances+1).each do |i|
+  (1..($num_node_instances.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
       cfg = MASTER_YAML
