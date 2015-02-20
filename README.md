@@ -10,40 +10,50 @@ If you're lazy and in a hurry, jump to [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
- * [Virtualbox](https://www.virtualbox.org) or
- [Parallels Desktop](http://www.parallels.com/eu/products/desktop/)
- * [Vagrant](https://www.vagrantup.com)
- * ```kubectl```
- * ```fleetctl``` (optional for debugging Fleet)
- * ```etcdctl``` (optional for debugging Etcd)
+ * **[Vagrant](https://www.vagrantup.com)**
+ * a supported Vagrant hypervisor
+ 	* **[Virtualbox](https://www.virtualbox.org)** (the default)
+ 	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
+ 	* **[VMware Fusion](http://www.vmware.com/products/fusion)** or **[VMware Workstation](http://www.vmware.com/products/workstation)**
+ * some needed userland
+ 	* **kubectl** (required to manage your kubernetes cluster)
+ 	* **fleetctl** (optional for *debugging* **[fleet](http://github.com/coreos/fleet)**)
+ 	* **etcdctl** (optional for *debugging* **[etcd](http://github.com/coreos/fleet)**)
 
-### fleetctl, etcdctl, kubectl
-
-On Mac OS, do, in advance
-```
-brew install wget fleetctl etcdctl
-```
-
-Now, we will download the ```kubectl``` binary into ```/usr/local/bin```, which should be (and most probably is) set in your ```$PATH```:
-```
-./kubLocalSetup install
-```
-You may specify a different ```kubectl``` version via the ```KUBERNETES_VERSION``` environment variable.
-
-Finally, let's set all needed environment variables in current shell:
-```
-$(./kubLocalSetup shellinit)
-```
-
-If you want to validate the environment variables we just set, run:
-```
-./kubLocalSetup shellinit
-```
-
-If you want to persist these changes to ```$PATH```, run:
-```
-$(./kubLocalSetup shellinit) >> ~/.bashrc
-```
+	> ### fleetctl, etcdctl, kubectl
+ 	>
+ 	> On **MacOS X**, do, in advance
+ 	> ```
+ 	> brew install wget fleetctl etcdctl
+ 	> ```
+ 	>
+ 	> Now, let's download the *kubectl* binary into */usr/local/bin*, which should
+ 	> be (and most probably is) set in your shell's *$PATH*:
+ 	>	> ```
+ 	>	> ./kubLocalSetup install
+	>	> ```
+ 	>  > You may specify a different *kubectl* version via the
+ 	> ```KUBERNETES_VERSION``` environment variable.
+ 	>
+ 	> Finally, let's set all needed environment variables in current shell:
+ 	> ```
+ 	> $(./kubLocalSetup shellinit)
+ 	> ```
+ 	>
+ 	> If you want to make that persistent across shells and reboots do instead:
+ 	> ```
+ 	> ./kubLocalSetup shellinit >> ˜/.bash_profile
+ 	> ```
+ 	>
+ 	> If you want to validate the environment variables we just set, run:
+ 	> ```
+ 	> ./kubLocalSetup shellinit
+ 	> ```
+   >
+   > If you want to persist these changes to ```$PATH```, run:
+   > ```
+   > $(./kubLocalSetup shellinit) >> ~/.bashrc
+   > ```
 
 ## Master
 
@@ -85,10 +95,11 @@ dd0ee115...	172.17.8.101	role=master
 c93da9ff...	172.17.8.103    role=minion
 ```
 
-## Parallels Desktop support
-
-If you are using **Parallels Desktop** and the [vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/) provider
-just add ```--provider parallels``` to the ```vagrant up``` invocations above
+## Notes about hypervisors
+- if you are using **VirtualBox** you don't need to do anything *extra* as it is the default Vagrant hypervisor.
+- If you are using **Parallels Desktop** you need to have installed the **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider which you can do by just doing ```vagrant plugin install vagrant-parallels```.
+Then just add ```--provider parallels``` to the ```vagrant up``` invocations above.
+- If you are using one of the **VMware** hypervisors you'll need to **[buy](http://www.vagrantup.com/vmware)** the matching Vagrant provider. After that and depending on your case, just add either ```--provider vmware-fusion``` or ```--provider vmware-workstation``` to the ```vagrant up``` invocations above.
 
 ## Customization
 
