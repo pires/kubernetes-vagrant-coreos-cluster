@@ -169,7 +169,7 @@ $(./kubLocalSetup shellinit)
 vagrant up master
 ```
 
-Wait until ```master``` has finished downloading Kubernetes binaries and provisioned a Docker mirror cache. This could take some minutes depending on your Internet speed. After that, bring on a couple minions:
+Wait until ```master``` has finished downloading Kubernetes binaries and provisioned a Docker mirror cache. This can take a few minutes depending on your Internet speed. After that, bring up a couple minions:
 
 ```
 NODE_MEM=2048 NODE_CPUS=1 NUM_INSTANCES=2 vagrant up
