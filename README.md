@@ -1,5 +1,5 @@
 # kubernetes-vagrant-coreos-cluster
-**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently 0.9.3)
+**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently 0.11.0)
 cluster made easy with [Vagrant](https://www.vagrantup.com) (1.7.2+) and
 **[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
 
@@ -144,7 +144,7 @@ All aspects of your cluster setup can be customized with environment variables. 
 
    > *If* the [world](http://google.com/about) was perfect we'd be using by default the latest and
    > greatest one, as it [isn't](https://github.com/GoogleCloudPlatform/kubernetes/issues/4415)
-   > currently we are defaulting to 0.9.3.
+   > currently we are defaulting to 0.11.0.
 
 
 

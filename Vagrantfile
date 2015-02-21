@@ -19,7 +19,7 @@ $vb_master_memory = ENV['MASTER_MEM'] || 512
 $vb_master_cpus = ENV['MASTER_CPUS'] || 1
 $vb_node_memory = ENV['NODE_MEM'] || 1024
 $vb_node_cpus = ENV['NODE_CPUS'] || 1
-$kubernetes_version = ENV['KUBERNETES_VERSION'] || '0.9.3'
+$kubernetes_version = ENV['KUBERNETES_VERSION'] || '0.11.0'
 
 if $update_channel != 'alpha'
 	puts "============================================================================="
