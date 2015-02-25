@@ -153,6 +153,10 @@ So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM
 ```
 NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
 ```
+## Private Repositories
+
+Docker stores keys for private repositories in a `.dockercfg` file.  Create a config file by running `docker login <registry>.<domain>` and then copying the resulting `.dockercfg` file to the same directory as the Vagrantfile.
+Vagrant will detect it and provision the nodes accordingly. If your cluster is already up and running, you can use the `vagrant provision` command to force Vagrant to provision the nodes again.
 
 ## TL;DR
 

@@ -9,6 +9,7 @@ Vagrant.require_version ">= 1.6.0"
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
+DOCKERCFG = File.join(File.dirname(__FILE__), ".dockercfg")
 
 $num_node_instances = ENV['NUM_INSTANCES'] || 2
 $update_channel = ENV['CHANNEL'] || 'alpha'
@@ -136,6 +137,15 @@ Vagrant.configure("2") do |config|
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
       #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
+
+      if File.exist?(DOCKERCFG)
+        kHost.vm.provision :file, :source => ".dockercfg", :destination => "/home/core/.dockercfg"
+
+        kHost.vm.provision "shell" do |s|
+          s.inline = "cp /home/core/.dockercfg /.dockercfg"
+          s.privileged = true
+        end
+      end
 
       if File.exist?(cfg)
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
