@@ -1,12 +1,13 @@
 # kubernetes-vagrant-coreos-cluster
-**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently 0.11.0)
-cluster made easy with [Vagrant](https://www.vagrantup.com) (1.7.2+) and
+**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently
+**[0.11.0](https://github.com/GoogleCloudPlatform/kubernetes/releases/tag/v0.11.0)**)
+cluster made easy with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
 **[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
 
 > Please see [bellow](#customization) for how to play with other CoreOS/kubernetes
 > combos, caveats included.
 
-If you're lazy and in a hurry, jump to [TL;DR](#tldr) section.
+####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
@@ -101,6 +102,9 @@ c93da9ff...	172.17.8.103    role=minion
 Then just add ```--provider parallels``` to the ```vagrant up``` invocations above.
 - If you are using one of the **VMware** hypervisors you'll need to **[buy](http://www.vagrantup.com/vmware)** the matching Vagrant provider. After that and depending on your case, just add either ```--provider vmware-fusion``` or ```--provider vmware-workstation``` to the ```vagrant up``` invocations above.
 
+## Private Repositories
+See **DOCKERCFG** bellow.
+
 ## Customization
 
 All aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
@@ -139,12 +143,17 @@ All aspects of your cluster setup can be customized with environment variables. 
    > Defaults to 1024 (in MB)
  - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs.
 
-    > Defaults to 1.
+   > Defaults to 1.
+ - **DOCKERCFG** sets the location of your private docker repositories (and keys) configuration.
+
+   > Defaults to "~/.dockercfg".
+   >
+   > You can create a *dockercfg* file at any time
+   > by running `docker login <registry>.<domain>`. All nodes are update automatically,
+   > at 'vagrant up', given any modification or update to that file.
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   > *If* the [world](http://google.com/about) was perfect we'd be using by default the latest and
-   > greatest one, as it [isn't](https://github.com/GoogleCloudPlatform/kubernetes/issues/4415)
-   > currently we are defaulting to 0.11.0.
+   > currently we are defaulting to 0.11.0, which is the last released version.
 
 
 
@@ -153,10 +162,6 @@ So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM
 ```
 NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
 ```
-## Private Repositories
-
-Docker stores keys for private repositories in a `.dockercfg` file.  Create a config file by running `docker login <registry>.<domain>` and then copying the resulting `.dockercfg` file to the same directory as the Vagrantfile.
-Vagrant will detect it and provision the nodes accordingly. If your cluster is already up and running, you can use the `vagrant provision` command to force Vagrant to provision the nodes again.
 
 ## TL;DR
 

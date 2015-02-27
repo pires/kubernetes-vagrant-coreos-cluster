@@ -9,7 +9,7 @@ Vagrant.require_version ">= 1.6.0"
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
-DOCKERCFG = File.join(File.dirname(__FILE__), ".dockercfg")
+DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
 $num_node_instances = ENV['NUM_INSTANCES'] || 2
 $update_channel = ENV['CHANNEL'] || 'alpha'
@@ -27,7 +27,7 @@ if $update_channel != 'alpha'
 	puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
 	puts "expected to behave reliably. While one can invoke the beta or stable channels"
 	puts "please be aware that your mileage may vary a whole lot."
-	puts "So, before submitting a bug, in this project, or upstream  (either kubernetes"
+	puts "So, before submitting a bug, in this project, or upstreams (either kubernetes"
 	puts "or CoreOS) please make sure it (also) happens in the (default) alpha channel."
 	puts "============================================================================="
 end
@@ -139,9 +139,10 @@ Vagrant.configure("2") do |config|
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
 
       if File.exist?(DOCKERCFG)
-        kHost.vm.provision :file, :source => ".dockercfg", :destination => "/home/core/.dockercfg"
+        kHost.vm.provision :file, run: "always",
+         :source => "#{DOCKERCFG}", :destination => "/home/core/.dockercfg"
 
-        kHost.vm.provision "shell" do |s|
+        kHost.vm.provision :shell, run: "always" do |s|
           s.inline = "cp /home/core/.dockercfg /.dockercfg"
           s.privileged = true
         end
