@@ -20,6 +20,22 @@ coreos:
         ExecStart=/usr/bin/fleetd
         Restart=always
         RestartSec=10s
+    - name: setup-network-environment.service
+      command: start
+      content: |
+        [Unit]
+        Description=Setup Network Environment
+        Documentation=https://github.com/kelseyhightower/setup-network-environment
+        Requires=network-online.target
+        After=network-online.target
+
+        [Service]
+        ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+        ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/setup-network-environment
+        ExecStartPre=/usr/bin/chmod +x /opt/bin/setup-network-environment
+        ExecStart=/opt/bin/setup-network-environment
+        RemainAfterExit=yes
+        Type=oneshot
     - name: flannel.service
       command: start
       content: |
@@ -50,22 +66,21 @@ coreos:
 
         [Install]
         WantedBy=multi-user.target
-    - name: setup-network-environment.service
+    - name: cadvisor.service
       command: start
-      content: |
+      content: |-
         [Unit]
-        Description=Setup Network Environment
-        Documentation=https://github.com/kelseyhightower/setup-network-environment
-        Requires=network-online.target
-        After=network-online.target
+        Description=cAdvisor Service
+        After=docker.service
+        Requires=docker.service
 
         [Service]
-        ExecStartPre=-/usr/bin/mkdir -p /opt/bin
-        ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/setup-network-environment
-        ExecStartPre=/usr/bin/chmod +x /opt/bin/setup-network-environment
-        ExecStart=/opt/bin/setup-network-environment
-        RemainAfterExit=yes
-        Type=oneshot
+        Restart=always
+        ExecStartPre=-/usr/bin/docker kill cadvisor
+        ExecStartPre=-/usr/bin/docker rm -f cadvisor
+        ExecStartPre=/usr/bin/docker pull google/cadvisor
+        ExecStart=/usr/bin/docker run --name cadvisor -v=/var/run:/var/run:rw -v=/sys:/sys:ro -v=/var/lib/docker/:/var/lib/docker:ro -p=4194:4194 google/cadvisor --logtostderr --port=4194
+        ExecStop=/usr/bin/docker stop -t 2 cadvisor
     - name: kube-proxy.service
       command: start
       content: |
