@@ -21,40 +21,35 @@ cluster made easy with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
  	* **fleetctl** (optional for *debugging* **[fleet](http://github.com/coreos/fleet)**)
  	* **etcdctl** (optional for *debugging* **[etcd](http://github.com/coreos/fleet)**)
 
-	> ### fleetctl, etcdctl, kubectl
- 	>
- 	> On **MacOS X**, do, in advance
- 	> ```
- 	> brew install wget fleetctl etcdctl
- 	> ```
- 	>
- 	> Now, let's download the *kubectl* binary into */usr/local/bin*, which should
- 	> be (and most probably is) set in your shell's *$PATH*:
- 	>	> ```
- 	>	> ./kubLocalSetup install
-	>	> ```
- 	>  > You may specify a different *kubectl* version via the
- 	> ```KUBERNETES_VERSION``` environment variable.
- 	>
- 	> Finally, let's set all needed environment variables in current shell:
- 	> ```
- 	> $(./kubLocalSetup shellinit)
- 	> ```
- 	>
- 	> If you want to make that persistent across shells and reboots do instead:
- 	> ```
- 	> ./kubLocalSetup shellinit >> ˜/.bash_profile
- 	> ```
- 	>
- 	> If you want to validate the environment variables we just set, run:
- 	> ```
- 	> ./kubLocalSetup shellinit
- 	> ```
-   >
-   > If you want to persist these changes to ```$PATH```, run:
-   > ```
-   > $(./kubLocalSetup shellinit) >> ~/.bashrc
-   > ```
+### fleetctl, etcdctl, kubectl installation notes
+
+- On **MacOS X** (and assuming you have [homebrew](http://brew.sh) already installed) run...
+
+   `brew install wget fleetctl etcdctl`.
+
+- Download the *kubectl* binary into */usr/local/bin*, which should be (and most
+probably is) set in your shell's *$PATH*...
+
+   `./kubLocalSetup install`
+
+   You may specify a different *kubectl* version via the `KUBERNETES_VERSION`
+   environment variable (see [here](#customization) for details).
+
+- Set all needed environment variables in current shell...
+
+   `$(./kubLocalSetup shellinit)`
+
+some points to keep note too:
+
+- If you want to make that persistent across shells and reboots do instead...
+
+   `./kubLocalSetup shellinit >> ˜/.bash_profile`
+- If you want to validate the environment variables we just set, run...
+
+   `./kubLocalSetup shellinit`
+- If you want to persist these changes to ```$PATH```, run...
+
+    `$(./kubLocalSetup shellinit) >> ~/.bashrc`
 
 ## Master
 
