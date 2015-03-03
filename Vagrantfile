@@ -1,54 +1,69 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+Vagrant.require_version ">= 1.6.0"
+
 require 'fileutils'
 require 'net/http'
 require 'open-uri'
 
-Vagrant.require_version ">= 1.6.0"
+class Module
+  def redefine_const(name, value)
+    __send__(:remove_const, name) if const_defined?(name)
+    const_set(name, value)
+  end
+end
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
+
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-$num_node_instances = ENV['NUM_INSTANCES'] || 2
-$update_channel = ENV['CHANNEL'] || 'alpha'
-$coreos_version = ENV['COREOS_VERSION'] || 'latest'
-$enable_serial_logging = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
-$vb_gui = (ENV['GUI'].to_s.downcase == 'true')
-$vb_master_memory = ENV['MASTER_MEM'] || 512
-$vb_master_cpus = ENV['MASTER_CPUS'] || 1
-$vb_node_memory = ENV['NODE_MEM'] || 1024
-$vb_node_cpus = ENV['NODE_CPUS'] || 1
-$kubernetes_version = ENV['KUBERNETES_VERSION'] || '0.11.0'
-
-if $update_channel != 'alpha'
-	puts "============================================================================="
-	puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
-	puts "expected to behave reliably. While one can invoke the beta or stable channels"
-	puts "please be aware that your mileage may vary a whole lot."
-	puts "So, before submitting a bug, in this project, or upstreams (either kubernetes"
-	puts "or CoreOS) please make sure it (also) happens in the (default) alpha channel."
-	puts "============================================================================="
-end
-
-upstream = "http://#{$update_channel}.release.core-os.net/amd64-usr/current"
-if $coreos_version == "latest"
-  url = "#{upstream}/version.txt"
-  $coreos_version = open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', '')
-end
-
-if $kubernetes_version == "latest"
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.11.0'
+if KUBERNETES_VERSION == "latest"
   url = "https://get.k8s.io"
-  $kubernetes_version = open(url).read().scan(/release=.*/)[0].gsub('release=v', '')
+  Object.redefine_const(:KUBERNETES_VERSION,
+    open(url).read().scan(/release=.*/)[0].gsub('release=v', ''))
 end
 
-Vagrant.configure("2") do |config|
+CHANNEL = ENV['CHANNEL'] || 'alpha'
+if CHANNEL != 'alpha'
+  puts "============================================================================="
+  puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
+  puts "expected to behave reliably. While one can invoke the beta or stable channels"
+  puts "please be aware that your mileage may vary a whole lot."
+  puts "So, before submitting a bug, in this project, or upstreams (either kubernetes"
+  puts "or CoreOS) please make sure it (also) happens in the (default) alpha channel."
+  puts "============================================================================="
+end
+
+COREOS_VERSION = ENV['COREOS_VERSION'] || 'latest'
+upstream = "http://#{CHANNEL}.release.core-os.net/amd64-usr/current"
+if COREOS_VERSION == "latest"
+  url = "#{upstream}/version.txt"
+  Object.redefine_const(:COREOS_VERSION,
+    open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', ''))
+end
+
+NUM_INSTANCES = ENV['NUM_INSTANCES'] || 2
+
+MASTER_MEM = ENV['MASTER_MEM'] || 512
+MASTER_CPUS = ENV['MASTER_CPUS'] || 1
+
+NODE_MEM= ENV['NODE_MEM'] || 1024
+NODE_CPUS = ENV['NODE_CPUS'] || 1
+
+SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
+GUI = (ENV['GUI'].to_s.downcase == 'true')
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
   config.ssh.insert_key = false
 
-  config.vm.box = "coreos-%s" % $update_channel
-  config.vm.box_version = ">= #{$coreos_version}"
+  config.vm.box = "coreos-#{CHANNEL}"
+  config.vm.box_version = ">= #{COREOS_VERSION}"
   config.vm.box_url = "#{upstream}/coreos_production_vagrant.json"
 
   ["vmware_fusion", "vmware_workstation"].each do |vmware|
@@ -58,8 +73,8 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider :parallels do |vb, override|
-    override.vm.box = 'AntonioMeireles/coreos-%s' % $update_channel
-    override.vm.box_url = 'https://vagrantcloud.com/AntonioMeireles/coreos-#{$update_channel}'
+    override.vm.box = "AntonioMeireles/coreos-#{CHANNEL}"
+    override.vm.box_url = "https://vagrantcloud.com/AntonioMeireles/coreos-#{CHANNEL}"
   end
 
   config.vm.provider :virtualbox do |v|
@@ -78,27 +93,27 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  (1..($num_node_instances.to_i + 1)).each do |i|
+  (1..(NUM_INSTANCES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
       cfg = MASTER_YAML
-      memory = $vb_master_memory
-      cpus = $vb_master_cpus
+      memory = MASTER_MEM
+      cpus = MASTER_CPUS
     else
       hostname = "node-%02d" % (i - 1)
       cfg = NODE_YAML
-      memory = $vb_node_memory
-      cpus = $vb_node_cpus
+      memory = NODE_MEM
+      cpus = NODE_CPUS
     end
 
     config.vm.define vmName = hostname do |kHost|
       kHost.vm.hostname = vmName
 
-      if $enable_serial_logging
+      if SERIAL_LOGGING
         logdir = File.join(File.dirname(__FILE__), "log")
         FileUtils.mkdir_p(logdir)
 
-        serialFile = File.join(logdir, "%s-serial.txt" % vmName)
+        serialFile = File.join(logdir, "#{vmName}-serial.txt")
         FileUtils.touch(serialFile)
 
         ["vmware_fusion", "vmware_workstation"].each do |vmware|
@@ -116,14 +131,16 @@ Vagrant.configure("2") do |config|
         # supported since vagrant-parallels 1.3.7
         # https://github.com/Parallels/vagrant-parallels/issues/164
         kHost.vm.provider :parallels do |v|
-          v.customize("post-import", ["set", :id, "--device-add", "serial", "--output", serialFile])
-          v.customize("pre-boot", ["set", :id, "--device-set", "serial0", "--output", serialFile])
+          v.customize("post-import",
+            ["set", :id, "--device-add", "serial", "--output", serialFile])
+          v.customize("pre-boot",
+            ["set", :id, "--device-set", "serial0", "--output", serialFile])
         end
       end
 
       ["vmware_fusion", "vmware_workstation", "virtualbox"].each do |h|
         kHost.vm.provider h do |vb|
-          vb.gui = $vb_gui
+          vb.gui = GUI
         end
       end
       ["parallels", "virtualbox"].each do |h|
@@ -134,8 +151,10 @@ Vagrant.configure("2") do |config|
       end
 
       kHost.vm.network :private_network, ip: "172.17.8.#{i+100}"
-      # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
-      #config.vm.synced_folder ".", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
+      # Uncomment below to enable NFS for sharing the host machine into the=
+      # coreos-vagrant VM.
+      # config.vm.synced_folder ".", "/home/core/share", id: "core",
+      #   :nfs => true, :mount_options => ['nolock,vers=3,udp']
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
 
       if File.exist?(DOCKERCFG)
@@ -152,11 +171,10 @@ Vagrant.configure("2") do |config|
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
-          sed -i 's,__RELEASE__,v#{$kubernetes_version},g' /tmp/vagrantfile-user-data
+          sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
     end
   end
 end
-
