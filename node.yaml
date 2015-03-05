@@ -120,5 +120,5 @@ coreos:
         Restart=always
         RestartSec=10
   update:
-    group: alpha
+    group: __CHANNEL__
     reboot-strategy: off
