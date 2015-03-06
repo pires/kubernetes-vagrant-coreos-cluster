@@ -60,7 +60,7 @@ GUI = (ENV['GUI'].to_s.downcase == 'true')
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
-  config.ssh.insert_key = false
+  config.ssh.insert_key = true
 
   config.vm.box = "coreos-#{CHANNEL}"
   config.vm.box_version = ">= #{COREOS_VERSION}"
