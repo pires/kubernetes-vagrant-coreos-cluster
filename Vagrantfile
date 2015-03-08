@@ -1,6 +1,16 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+required_plugins = %w(vagrant-triggers)
+required_plugins.each do |plugin|
+  need_restart = false
+  unless Vagrant.has_plugin? plugin
+    system "vagrant plugin install #{plugin}"
+    need_restart = true
+  end
+  exec "vagrant #{ARGV.join(' ')}" if need_restart
+end
+
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.require_version ">= 1.6.0"
@@ -61,6 +71,7 @@ GUI = (ENV['GUI'].to_s.downcase == 'true')
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
   config.ssh.insert_key = false
+  config.ssh.forward_agent = true
 
   config.vm.box = "coreos-#{CHANNEL}"
   config.vm.box_version = ">= #{COREOS_VERSION}"
@@ -177,5 +188,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         EOF
       end
     end
+  end
+  config.trigger.after [:up, :resume] do
+    info "making sure ssh agent has the default vagrant key..."
+    system "ssh-add ~/.vagrant.d/insecure_private_key"
   end
 end
