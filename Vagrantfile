@@ -1,6 +1,17 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'fileutils'
+require 'net/http'
+require 'open-uri'
+
+class Module
+  def redefine_const(name, value)
+    __send__(:remove_const, name) if const_defined?(name)
+    const_set(name, value)
+  end
+end
+
 required_plugins = %w(vagrant-triggers)
 required_plugins.each do |plugin|
   need_restart = false
@@ -14,17 +25,6 @@ end
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.require_version ">= 1.6.0"
-
-require 'fileutils'
-require 'net/http'
-require 'open-uri'
-
-class Module
-  def redefine_const(name, value)
-    __send__(:remove_const, name) if const_defined?(name)
-    const_set(name, value)
-  end
-end
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
@@ -65,8 +65,23 @@ MASTER_CPUS = ENV['MASTER_CPUS'] || 1
 NODE_MEM= ENV['NODE_MEM'] || 1024
 NODE_CPUS = ENV['NODE_CPUS'] || 1
 
+ETCD_CLUSTER_SIZE = ENV['ETCD_CLUSTER_SIZE'] || 3
+
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
+
+(1..(NUM_INSTANCES.to_i + 1)).each do |i|
+  case i
+  when 1
+    ETCD_SEED_CLUSTER = ""
+    hostname = "master"
+  else
+    hostname = ",node-%02d" % (i - 1)
+  end
+  if i <= ETCD_CLUSTER_SIZE
+    ETCD_SEED_CLUSTER.concat("#{hostname}=http://172.17.8.#{i+100}:2380")
+  end
+end
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
@@ -76,6 +91,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "coreos-#{CHANNEL}"
   config.vm.box_version = ">= #{COREOS_VERSION}"
   config.vm.box_url = "#{upstream}/coreos_production_vagrant.json"
+
+  config.trigger.after [:up, :resume] do
+    info "making sure ssh agent has the default vagrant key..."
+    system "ssh-add ~/.vagrant.d/insecure_private_key"
+  end
 
   ["vmware_fusion", "vmware_workstation"].each do |vmware|
     config.vm.provider vmware do |v, override|
@@ -184,13 +204,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         inline: <<-EOF
           sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
+          sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
+          sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
     end
-  end
-  config.trigger.after [:up, :resume] do
-    info "making sure ssh agent has the default vagrant key..."
-    system "ssh-add ~/.vagrant.d/insecure_private_key"
   end
 end
