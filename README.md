@@ -43,7 +43,7 @@ some points to keep note too:
 
 - If you want to make that persistent across shells and reboots do instead...
 
-   `./kubLocalSetup shellinit >> ˜/.bash_profile`
+   `./kubLocalSetup shellinit >> ~/.bash_profile`
 - If you want to validate the environment variables we just set, run...
 
    `./kubLocalSetup shellinit`
