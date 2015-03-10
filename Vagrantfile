@@ -57,6 +57,8 @@ if COREOS_VERSION == "latest"
     open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', ''))
 end
 
+MVN_SYNC_FOLDER = ENV['MVN_SYNC_FOLDER'] || nil
+
 NUM_INSTANCES = ENV['NUM_INSTANCES'] || 2
 
 MASTER_MEM = ENV['MASTER_MEM'] || 512
@@ -76,6 +78,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "coreos-#{CHANNEL}"
   config.vm.box_version = ">= #{COREOS_VERSION}"
   config.vm.box_url = "#{upstream}/coreos_production_vagrant.json"
+
+  # Configure maven repository to use host folder
+  if MVN_SYNC_FOLDER != nil then
+    config.vm.synced_folder "#{MVN_SYNC_FOLDER}", "/home/core/.m2/repository", :nfs => true, :mount_options => ['nolock,vers=3,udp,noatime']    
+  end
 
   ["vmware_fusion", "vmware_workstation"].each do |vmware|
     config.vm.provider vmware do |v, override|
