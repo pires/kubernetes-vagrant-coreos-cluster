@@ -83,6 +83,9 @@ GUI = (ENV['GUI'].to_s.downcase == 'true')
   end
 end
 
+# Read YAML file with mountpoint details
+MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
   config.ssh.insert_key = false
@@ -182,11 +185,35 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       kHost.vm.network :private_network, ip: "172.17.8.#{i+100}"
-      # Uncomment below to enable NFS for sharing the host machine into the=
-      # coreos-vagrant VM.
-      # config.vm.synced_folder ".", "/home/core/share", id: "core",
-      #   :nfs => true, :mount_options => ['nolock,vers=3,udp']
+      # you can override this in synced_folders.yaml
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
+
+      begin
+        MOUNT_POINTS.each do |mount|
+          mount_options = ""
+          disabled = false
+          nfs =  true
+          if mount['mount_options']
+            mount_options = mount['mount_options']
+          end
+          if mount['disabled']
+            disabled = mount['disabled']
+          end
+          if mount['nfs']
+            nfs = mount['nfs']
+          end
+          if File.exist?(File.expand_path("#{mount['source']}"))
+            if mount['destination']
+              kHost.vm.synced_folder "#{mount['source']}", "#{mount['destination']}",
+                id: "#{mount['name']}",
+                disabled: disabled,
+                mount_options: ["#{mount_options}"],
+                nfs: nfs
+            end
+          end
+        end
+      rescue
+      end
 
       if File.exist?(DOCKERCFG)
         kHost.vm.provision :file, run: "always",

@@ -101,8 +101,8 @@ Then just add ```--provider parallels``` to the ```vagrant up``` invocations abo
 See **DOCKERCFG** bellow.
 
 ## Customization
-
-All aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
+### Environment variables
+Most aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
 
  - **NUM_INSTANCES** sets the number of nodes (minions).
 
@@ -156,11 +156,33 @@ All aspects of your cluster setup can be customized with environment variables. 
    Currently we are defaulting to **0.11.0**, which is the last released version.
 
 
-
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
 
 ```
 NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
+```
+
+### Synced Folders
+You can automatically mount in your *guest* VMs, at startup, an arbitrary
+number of local folders in your host machine by populating accordingly the
+`synced_folders.yaml` file in your `Vagrantfile` directory. For each folder
+you which to mount the allowed syntax is...
+
+```yaml
+# the *id* of this mount point. needs to be unique.
+- name: foobar
+# the host source directory to share with the guest(s).
+  source: /foo
+# the path to mount ${source} above on guest(s)
+  destination: /bar
+# the mount type. only NFS makes sense as, presently, we are not shipping
+# hypervisor specific guest tools. defaults to `true`.
+  nfs: true
+# additional options to pass to the mount command on the guest(s)
+# if not set the Vagrant NFS defaults will be used.
+  mount_options: 'nolock,vers=3,udp,noatime'
+# if the mount is enabled or disabled by default. default is `true`.
+  disabled: false
 ```
 
 ## TL;DR
