@@ -43,7 +43,7 @@ some points to keep note too:
 
 - If you want to make that persistent across shells and reboots do instead...
 
-   `./kubLocalSetup shellinit >> ˜/.bash_profile`
+   `./kubLocalSetup shellinit >> ~/.bash_profile`
 - If you want to validate the environment variables we just set, run...
 
    `./kubLocalSetup shellinit`
@@ -145,6 +145,12 @@ All aspects of your cluster setup can be customized with environment variables. 
    You can create/update a *~/.dockercfg* file at any time
    by running `docker login <registry>.<domain>`. All nodes will get it automatically,
    at 'vagrant up', given any modification or update to that file.
+
+ - **ETCD_CLUSTER_SIZE** sets the number of nodes in the default built-in etcd
+   cluster.
+
+   Defaults to **3** (or the total number of nodes of the cluster if lower).
+
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
    Currently we are defaulting to **0.11.0**, which is the last released version.
@@ -169,20 +175,30 @@ $(./kubLocalSetup shellinit)
 ### Set-up cluster
 
 ```
-vagrant up master
-```
-
-Wait until ```master``` has finished downloading Kubernetes binaries and provisioned a Docker mirror cache. This can take a few minutes depending on your Internet speed. After that, bring up a couple minions:
-
-```
 NODE_MEM=2048 NODE_CPUS=1 NUM_INSTANCES=2 vagrant up
 ```
 
-## Usage
+This will start the `master` and 2 `minion` nodes. On them a local etcd
+cluster will be bootstrapped, Kubernetes binaries will be downloaded and
+all needed services started, as a *bonus* a docker mirror cache will be
+provisioned in the `master`, to speed up container provisioning. This
+can take a little bit depending on your Internet connection speed.
 
-You're now ready to use your Kubernetes cluster.
+Please do note that, at any time, you can increase the number of running
+`minion` VMs by increasing the `NUM_INSTANCES` value in subsequent
+`vagrant up` invocations.
 
-If you just want to test something simple, start with [Kubernetes examples](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/).
+### Usage
+
+Congratulations! You're now ready to use your Kubernetes cluster.
+
+If you just want to test something simple, start with [Kubernetes examples]
+(https://github.com/GoogleCloudPlatform/kubernetes/blob/master/examples/).
+
+For a more elaborate scenario [here]
+(https://github.com/pires/kubernetes-elasticsearch-cluster) you'll find all
+you need to get a scalable Elasticsearch cluster on top of Kubernetes in no
+time.
 
 ## Licensing
 
