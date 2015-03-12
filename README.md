@@ -1,7 +1,6 @@
 # kubernetes-vagrant-coreos-cluster
-**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently
-**[0.11.0](https://github.com/GoogleCloudPlatform/kubernetes/releases/tag/v0.11.0)**)
-cluster made easy with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
+**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** cluster made
+easy with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
 **[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
 
 > Please see [bellow](#customization) for how to play with other CoreOS/kubernetes
@@ -153,7 +152,9 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Currently we are defaulting to **0.11.0**, which is the last released version.
+   Currently we are defaulting to **[0.12.1]
+   (https://github.com/GoogleCloudPlatform/kubernetes/releases/tag/v0.12.1)**
+   which is upstream's latest *release candidate*.
 
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
