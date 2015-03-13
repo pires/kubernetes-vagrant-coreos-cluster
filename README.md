@@ -1,10 +1,7 @@
 # kubernetes-vagrant-coreos-cluster
-**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** cluster made
-easy with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
-**[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
-
-> Please see [bellow](#customization) for how to play with other CoreOS/kubernetes
-> combos, caveats included.
+Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
+cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
+**[CoreOS](https://coreos.com)**.
 
 ####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
@@ -108,17 +105,14 @@ Most aspects of your cluster setup can be customized with environment variables.
    Defaults to **2**.
  - **UPDATE_CHANNEL** sets the default CoreOS channel to be used in the VMs.
 
-   The default is the **alpha** channel (alternatives would be **stable** and **beta**).
+   Defaults to **alpha**.
 
-   Please do note that as Kubernetes is a fastly evolving technology **CoreOS' _alpha_
-   channel is the only one expected to behave reliably**. While, by convenience, we allow
-   one to invoke the _beta_ or _stable_ channels please be aware that your mileage
-   when consuming them may vary a whole lot.
-   > So, **before submitting a bug**, in
+   ###### While by convenience, we allow an user to optionally consume CoreOS' *beta* or *stable* channels please do note that as both Kubernetes and CoreOS are quickly evolving platforms we only expect our setup to behave reliably on top of CoreOS' _alpha_ channel.
+   > So, **before submitting a bug**, either in
    > [this](https://github.com/pires/kubernetes-vagrant-coreos-cluster/issues) project,
-   > or upstream (either [Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues)
-   > or [CoreOS](https://github.com/coreos/bugs/issues))
-   > please **make sure it** (also) **happens in the** (default) **_alpha_ channel** :smile:
+   > or on our *upstreams* ([Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues)
+   > or [CoreOS](https://github.com/coreos/bugs/issues)) **make sure it** (also)
+   > **happens in the** (default) **_alpha_ channel** :smile:
  - **COREOS_VERSION** will set the specific CoreOS release (from the given channel) to be used.
 
    Default is to use whatever is the **latest** one from the given channel.
@@ -170,7 +164,7 @@ number of local folders in your host machine by populating accordingly the
 you which to mount the allowed syntax is...
 
 ```yaml
-# the *id* of this mount point. needs to be unique.
+# the 'id' of this mount point. needs to be unique.
 - name: foobar
 # the host source directory to share with the guest(s).
   source: /foo
