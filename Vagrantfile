@@ -50,7 +50,7 @@ if CHANNEL != 'alpha'
 end
 
 COREOS_VERSION = ENV['COREOS_VERSION'] || 'latest'
-upstream = "http://#{CHANNEL}.release.core-os.net/amd64-usr/current"
+upstream = "http://#{CHANNEL}.release.core-os.net/amd64-usr/#{COREOS_VERSION}"
 if COREOS_VERSION == "latest"
   url = "#{upstream}/version.txt"
   Object.redefine_const(:COREOS_VERSION,
