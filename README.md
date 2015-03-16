@@ -157,6 +157,11 @@ So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM
 NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
 ```
 
+Please do note that if you were using non default settings to startup your
+cluster you *must* also use those exact settings when invoking
+`vagrant ssh` to communicate with any of the nodes in the cluster as otherwise
+things may not behave as you'd expect.
+
 ### Synced Folders
 You can automatically mount in your *guest* VMs, at startup, an arbitrary
 number of local folders in your host machine by populating accordingly the
