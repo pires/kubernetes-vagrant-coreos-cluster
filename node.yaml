@@ -109,6 +109,11 @@ coreos:
       drop-ins:
         - name: 51-docker-mirror.conf
           content: |
+            [Unit]
+            # making sure that flanneld finished startup, otherwise containers
+            # won't land in flannel's network...
+            Requires=flanneld.service
+            After=flanneld.service
             [Service]
             Environment=DOCKER_OPTS='--registry-mirror=http://172.17.8.101:5000'
     - name: rpc-statd.service
