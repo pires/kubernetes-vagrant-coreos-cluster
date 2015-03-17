@@ -115,6 +115,7 @@ coreos:
             Requires=flanneld.service
             After=flanneld.service
             [Service]
+            ExecStartPre=/opt/bin/wupiao 172.17.8.101 5000
             Environment=DOCKER_OPTS='--registry-mirror=http://172.17.8.101:5000'
     - name: rpc-statd.service
       command: start
