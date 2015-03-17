@@ -119,13 +119,6 @@ coreos:
     - name: rpc-statd.service
       command: start
       enable: true
-    # - name: mnt-data.mount
-    #   command: start
-    #   content: |
-    #     [Mount]
-    #     What=filer.your.domain:/volX/dataY
-    #     Where=/mnt/dataY
-    #     Type=nfs
     - name: cadvisor.service
       command: start
       content: |
