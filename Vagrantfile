@@ -31,7 +31,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.12.1'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || 'latest'
 if KUBERNETES_VERSION == "latest"
   url = "https://get.k8s.io"
   Object.redefine_const(:KUBERNETES_VERSION,

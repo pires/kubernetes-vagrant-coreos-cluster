@@ -146,9 +146,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Currently we are defaulting to **[0.12.1]
-   (https://github.com/GoogleCloudPlatform/kubernetes/releases/tag/v0.12.1)**
-   which is upstream's latest *release candidate*.
+   Defaults to latest released version.
 
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
