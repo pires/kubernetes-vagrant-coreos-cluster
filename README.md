@@ -1,11 +1,7 @@
 # kubernetes-vagrant-coreos-cluster
-**[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)** (currently
-**[0.11.0](https://github.com/GoogleCloudPlatform/kubernetes/releases/tag/v0.11.0)**)
-cluster made easy with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
-**[CoreOS](https://coreos.com)** [(alpha/593.0.0)](https://coreos.com/releases/).
-
-> Please see [bellow](#customization) for how to play with other CoreOS/kubernetes
-> combos, caveats included.
+Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
+cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
+**[CoreOS](https://coreos.com)**.
 
 ####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
@@ -101,25 +97,22 @@ Then just add ```--provider parallels``` to the ```vagrant up``` invocations abo
 See **DOCKERCFG** bellow.
 
 ## Customization
-
-All aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
+### Environment variables
+Most aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
 
  - **NUM_INSTANCES** sets the number of nodes (minions).
 
    Defaults to **2**.
  - **UPDATE_CHANNEL** sets the default CoreOS channel to be used in the VMs.
 
-   The default is the **alpha** channel (alternatives would be **stable** and **beta**).
+   Defaults to **alpha**.
 
-   Please do note that as Kubernetes is a fastly evolving technology **CoreOS' _alpha_
-   channel is the only one expected to behave reliably**. While, by convenience, we allow
-   one to invoke the _beta_ or _stable_ channels please be aware that your mileage
-   when consuming them may vary a whole lot.
-   > So, **before submitting a bug**, in
+   ###### While by convenience, we allow an user to optionally consume CoreOS' *beta* or *stable* channels please do note that as both Kubernetes and CoreOS are quickly evolving platforms we only expect our setup to behave reliably on top of CoreOS' _alpha_ channel.
+   > So, **before submitting a bug**, either in
    > [this](https://github.com/pires/kubernetes-vagrant-coreos-cluster/issues) project,
-   > or upstream (either [Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues)
-   > or [CoreOS](https://github.com/coreos/bugs/issues))
-   > please **make sure it** (also) **happens in the** (default) **_alpha_ channel** :smile:
+   > or on our *upstreams* ([Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues)
+   > or [CoreOS](https://github.com/coreos/bugs/issues)) **make sure it** (also)
+   > **happens in the** (default) **_alpha_ channel** :smile:
  - **COREOS_VERSION** will set the specific CoreOS release (from the given channel) to be used.
 
    Default is to use whatever is the **latest** one from the given channel.
@@ -153,14 +146,41 @@ All aspects of your cluster setup can be customized with environment variables. 
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Currently we are defaulting to **0.11.0**, which is the last released version.
-
+   Defaults to latest released version.
 
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
 
 ```
 NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
+```
+
+Please do note that if you were using non default settings to startup your
+cluster you *must* also use those exact settings when invoking
+`vagrant ssh` to communicate with any of the nodes in the cluster as otherwise
+things may not behave as you'd expect.
+
+### Synced Folders
+You can automatically mount in your *guest* VMs, at startup, an arbitrary
+number of local folders in your host machine by populating accordingly the
+`synced_folders.yaml` file in your `Vagrantfile` directory. For each folder
+you which to mount the allowed syntax is...
+
+```yaml
+# the 'id' of this mount point. needs to be unique.
+- name: foobar
+# the host source directory to share with the guest(s).
+  source: /foo
+# the path to mount ${source} above on guest(s)
+  destination: /bar
+# the mount type. only NFS makes sense as, presently, we are not shipping
+# hypervisor specific guest tools. defaults to `true`.
+  nfs: true
+# additional options to pass to the mount command on the guest(s)
+# if not set the Vagrant NFS defaults will be used.
+  mount_options: 'nolock,vers=3,udp,noatime'
+# if the mount is enabled or disabled by default. default is `true`.
+  disabled: false
 ```
 
 ## TL;DR

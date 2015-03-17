@@ -62,7 +62,7 @@ coreos:
         LimitNOFILE=40000
         ExecStartPre=-/usr/bin/docker kill etcd
         ExecStartPre=-/usr/bin/docker rm etcd
-        ExecStartPre=/usr/bin/docker pull quay.io/coreos/etcd:v2.0.4
+        ExecStartPre=/usr/bin/docker pull quay.io/coreos/etcd:v2.0.5
         ExecStart=/bin/bash -c "/usr/bin/docker run \
             --net=host \
             -p 2379:2379 \
@@ -72,7 +72,7 @@ coreos:
             --name etcd \
             -v /opt/etcd:/opt/etcd \
             -v /usr/share/ca-certificates/:/etc/ssl/certs \
-            quay.io/coreos/etcd:v2.0.4 \
+            quay.io/coreos/etcd:v2.0.5 \
             -data-dir /opt/etcd \
             -name __NAME__ \
             -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
@@ -136,8 +136,10 @@ coreos:
         - name: 51-docker-mirror.conf
           content: |
             [Unit]
-            Requires=docker-cache.service
-            After=docker-cache.service
+            # making sure that docker-cache is up and that flanneld finished
+            # startup, otherwise containers won't land in flannel's network...
+            Requires=docker-cache.service flanneld.service
+            After=docker-cache.service flanneld.service
             [Service]
             Environment=DOCKER_OPTS='--registry-mirror=http://$private_ipv4:5000'
     - name: rpc-statd.service
