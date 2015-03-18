@@ -88,12 +88,27 @@ c93da9ff...	172.17.8.103    role=minion
 ```
 
 ## Notes about hypervisors
-- if you are using **VirtualBox** you don't need to do anything *extra* as it is the default Vagrant hypervisor.
-- If you are using **Parallels Desktop** you need to have installed the **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider which you can do by just doing ```vagrant plugin install vagrant-parallels```.
+
+### Virtualbox
+
+**VirtualBox** is the default hypervisor, and you'll probably need to disable its DHCP server
+```
+VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
+```
+
+### Parallels
+
+If you are using **Parallels Desktop**, you need to install **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider 
+```
+vagrant plugin install vagrant-parallels
+```
 Then just add ```--provider parallels``` to the ```vagrant up``` invocations above.
-- If you are using one of the **VMware** hypervisors you'll need to **[buy](http://www.vagrantup.com/vmware)** the matching Vagrant provider. After that and depending on your case, just add either ```--provider vmware-fusion``` or ```--provider vmware-workstation``` to the ```vagrant up``` invocations above.
+
+### VMware
+If you are using one of the **VMware** hypervisors you must **[buy](http://www.vagrantup.com/vmware)** the matching  provider and, depending on your case, just add either ```--provider vmware-fusion``` or ```--provider vmware-workstation``` to the ```vagrant up``` invocations above.
 
 ## Private Repositories
+
 See **DOCKERCFG** bellow.
 
 ## Customization
@@ -108,11 +123,7 @@ Most aspects of your cluster setup can be customized with environment variables.
    Defaults to **alpha**.
 
    ###### While by convenience, we allow an user to optionally consume CoreOS' *beta* or *stable* channels please do note that as both Kubernetes and CoreOS are quickly evolving platforms we only expect our setup to behave reliably on top of CoreOS' _alpha_ channel.
-   > So, **before submitting a bug**, either in
-   > [this](https://github.com/pires/kubernetes-vagrant-coreos-cluster/issues) project,
-   > or on our *upstreams* ([Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues)
-   > or [CoreOS](https://github.com/coreos/bugs/issues)) **make sure it** (also)
-   > **happens in the** (default) **_alpha_ channel** :smile:
+   So, **before submitting a bug**, either in [this](https://github.com/pires/kubernetes-vagrant-coreos-cluster/issues) project, or in ([Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes/issues) or [CoreOS](https://github.com/coreos/bugs/issues)) **make sure it** (also) **happens in the** (default) **_alpha_ channel** :smile:
  - **COREOS_VERSION** will set the specific CoreOS release (from the given channel) to be used.
 
    Default is to use whatever is the **latest** one from the given channel.
