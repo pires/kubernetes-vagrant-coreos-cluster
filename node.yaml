@@ -16,6 +16,11 @@ write-files:
     content: |
       #! /usr/bin/bash
       until curl http://172.17.8.101:5000; do sleep 2; done
+  - path: /opt/bin/kube-apiserver-waiter.sh
+    owner: root
+    content: |
+      #! /usr/bin/bash
+      until curl http://172.17.8.101:8080; do sleep 2; done
 coreos:
   fleet:
     public-ip: $public_ipv4
@@ -50,6 +55,19 @@ coreos:
         [Service]
         ExecStartPre=/usr/bin/chmod +x /opt/bin/docker-cache-waiter.sh
         ExecStart=/usr/bin/bash /opt/bin/docker-cache-waiter.sh
+        RemainAfterExit=true
+        Type=oneshot
+    - name: kube-apiserver-waiter.service
+      command: start
+      content: |
+        [Unit]
+        Description=Kubernetes API Server waiter
+        Wants=network-online.target
+        After=network-online.target
+
+        [Service]
+        ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-apiserver-waiter.sh
+        ExecStart=/usr/bin/bash /opt/bin/kube-apiserver-waiter.sh
         RemainAfterExit=true
         Type=oneshot
     - name: fleet.service
@@ -138,6 +156,8 @@ coreos:
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         After=cadvisor.service
         Requires=cadvisor.service
+        Requires=kube-apiserver-waiter.service
+        After=kube-apiserver-waiter.service
 
         [Service]
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-proxy
@@ -155,6 +175,8 @@ coreos:
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         After=cadvisor.service
         Requires=cadvisor.service
+        Requires=kube-apiserver-waiter.service
+        After=kube-apiserver-waiter.service
 
         [Service]
         EnvironmentFile=/etc/network-environment
