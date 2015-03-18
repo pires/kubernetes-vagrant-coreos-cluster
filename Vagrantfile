@@ -31,12 +31,13 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || 'latest'
-if KUBERNETES_VERSION == "latest"
-  url = "https://get.k8s.io"
-  Object.redefine_const(:KUBERNETES_VERSION,
-    open(url).read().scan(/release=.*/)[0].gsub('release=v', ''))
-end
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.13.1'
+# The following isn't true since latest as of the moment is 0.13.1 but script below says 0.10.1
+#if KUBERNETES_VERSION == "latest"
+#  url = "https://get.k8s.io"
+#  Object.redefine_const(:KUBERNETES_VERSION,
+#    open(url).read().scan(/release=.*/)[0].gsub('release=v', ''))
+#end
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
@@ -66,21 +67,15 @@ MASTER_CPUS = ENV['MASTER_CPUS'] || 1
 NODE_MEM= ENV['NODE_MEM'] || 1024
 NODE_CPUS = ENV['NODE_CPUS'] || 1
 
-ETCD_CLUSTER_SIZE = ENV['ETCD_CLUSTER_SIZE'] || 3
-
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 
 (1..(NUM_INSTANCES.to_i + 1)).each do |i|
   case i
   when 1
-    ETCD_SEED_CLUSTER = ""
     hostname = "master"
   else
     hostname = ",node-%02d" % (i - 1)
-  end
-  if i <= ETCD_CLUSTER_SIZE
-    ETCD_SEED_CLUSTER.concat("#{hostname}=http://172.17.8.#{i+100}:2380")
   end
 end
 
@@ -233,7 +228,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
-          sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end

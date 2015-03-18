@@ -6,25 +6,19 @@ write-files:
     permissions: '0644'
     content: |
       OPTS_RPC_MOUNTD=""
-  - path: /opt/bin/wupiao
-    permissions: '0755'
+  - path: /opt/bin/waiter.sh
+    owner: root
     content: |
-      #!/bin/bash
-      # [w]ait [u]ntil [p]ort [i]s [a]ctually [o]pen
-      [ -n "$1" ] && [ -n "$2" ] && \
-        until curl -o /dev/null -sIf http://${1}:${2}; do \
-          sleep 1 && echo .;
-        done;
-      exit $?
+      #! /usr/bin/bash
+      until curl http://127.0.0.1:4001/v2/machines; do sleep 2; done
 
 coreos:
   fleet:
     public-ip: $public_ipv4
-    etcd-servers: http://$private_ipv4:2379
+    etcd_servers: http://172.17.8.101:4001
     metadata: "role=master"
   flannel:
     interface: eth1
-
   units:
     - name: setup-network-environment.service
       command: start
@@ -46,116 +40,129 @@ coreos:
       command: start
       content: |
         [Unit]
-        Description=etcd 2.0
-        Requires=early-docker.service
-        After=early-docker.service
-        Before=early-docker.target
+        Description=etcd
+        Requires=setup-network-environment.service
+        After=setup-network-environment.service
 
         [Service]
+        EnvironmentFile=/etc/network-environment
+        User=etcd
+        PermissionsStartOnly=true
+        ExecStart=/usr/bin/etcd \
+          --name $public_ipv4 \
+          --addr $public_ipv4:4001 \
+          --bind-addr 0.0.0.0 \
+          --cluster-active-size 1 \
+          --data-dir /var/lib/etcd \
+          --http-read-timeout 86400 \
+          --peer-addr $public_ipv4:7001 \
+          --snapshot true
         Restart=always
-        RestartSec=5
-        Environment="TMPDIR=/var/tmp/"
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-        EnvironmentFile=/etc/environment
-        TimeoutStartSec=0
-        SyslogIdentifier=writer_process
-        LimitNOFILE=40000
-        ExecStartPre=-/usr/bin/docker kill etcd
-        ExecStartPre=-/usr/bin/docker rm etcd
-        ExecStartPre=/usr/bin/docker pull quay.io/coreos/etcd:v2.0.5
-        ExecStart=/bin/bash -c "/usr/bin/docker run \
-            --net=host \
-            -p 2379:2379 \
-            -p 2380:2380 \
-            -p 4001:4001 \
-            -p 7001:7001 \
-            --name etcd \
-            -v /opt/etcd:/opt/etcd \
-            -v /usr/share/ca-certificates/:/etc/ssl/certs \
-            quay.io/coreos/etcd:v2.0.5 \
-            -data-dir /opt/etcd \
-            -name __NAME__ \
-            -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
-            -advertise-client-urls http://$COREOS_PRIVATE_IPV4:2379,http://$COREOS_PRIVATE_IPV4:4001 \
-            -initial-cluster-token k8s_etcd \
-            -listen-peer-urls http://0.0.0.0:2380 \
-            -initial-advertise-peer-urls http://$COREOS_PRIVATE_IPV4:2380 \
-            -initial-cluster __ETCD_SEED_CLUSTER__ \
-            -initial-cluster-state new"
-        ExecStop=/usr/bin/docker kill etcd
-
-        [X-Fleet]
-        Conflicts=etcd*
-    - name: flanneld.service
+        RestartSec=10s
+    - name: fleet.socket
       command: start
-      drop-ins:
-        - name: 50-network-config.conf
-          content: |
-            [Service]
-            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "vxlan"}}'
-            # as we need to turn eth1 as the default interface
-            # https://github.com/coreos/bugs/issues/228 is sorted
-            # see notes in https://github.com/coreos/flannel/pull/137
-            ExecStart=
-            ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
-                /usr/bin/docker run --net=host --privileged=true --rm \
-                    --volume=/run/flannel:/run/flannel \
-                    --env=NOTIFY_SOCKET=/run/flannel/sd.sock \
-                    --env-file=/run/flannel/options.env \
-                    --volume=${ETCD_SSL_DIR}:/etc/ssl/etcd:ro \
-                    quay.io/coreos/flannel:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true --iface=eth1
+      content: |
+        [Socket]
+        ListenStream=/var/run/fleet.sock
+    - name: fleet.service
+      command: start
+      content: |
+        [Unit]
+        Description=fleet daemon
+        Wants=etcd.service
+        After=etcd.service
+        Wants=fleet.socket
+        After=fleet.socket
+
+        [Service]
+        ExecStart=/usr/bin/fleetd
+        Restart=always
+        RestartSec=10s
+    - name: etcd-waiter.service
+      command: start
+      content: |
+        [Unit]
+        Description=etcd waiter
+        Wants=network-online.target
+        Wants=etcd.service
+        After=etcd.service
+        After=network-online.target
+        Before=flannel.service
+
+        [Service]
+        ExecStartPre=/usr/bin/chmod +x /opt/bin/waiter.sh
+        ExecStart=/usr/bin/bash /opt/bin/waiter.sh
+        RemainAfterExit=true
+        Type=oneshot
     - name: docker-cache.service
       command: start
       content: |
         [Unit]
         Description=Docker cache proxy
-        Requires=early-docker.service
-        After=early-docker.service
-        Before=early-docker.target
+        Wants=network-online.target
+        Wants=docker.service
+        After=docker.service
+        After=docker-online.target
 
         [Service]
-        Restart=always
-        TimeoutStartSec=0
-        RestartSec=5
-        Environment="TMPDIR=/var/tmp/"
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
         ExecStartPre=-/usr/bin/docker kill docker-registry
         ExecStartPre=-/usr/bin/docker rm docker-registry
-        ExecStartPre=/usr/bin/docker pull quay.io/devops/docker-registry:latest
         # GUNICORN_OPTS is an workaround for
         # https://github.com/docker/docker-registry/issues/892
-        ExecStart=/usr/bin/docker run --restart always --net host --name docker-registry \
-            -e STANDALONE=false \
-            -e GUNICORN_OPTS=[--preload] \
-            -e MIRROR_SOURCE=https://registry-1.docker.io \
-            -e MIRROR_SOURCE_INDEX=https://index.docker.io \
-            -e MIRROR_TAGS_CACHE_TTL=1800 \
-            quay.io/devops/docker-registry:latest
-    - name: fleet.service
+        ExecStart=/usr/bin/docker run -d --restart always --net host --name docker-registry \
+          -e STANDALONE=false \
+          -e GUNICORN_OPTS=[--preload] \
+          -e MIRROR_SOURCE=https://registry-1.docker.io \
+          -e MIRROR_SOURCE_INDEX=https://index.docker.io \
+          -e MIRROR_TAGS_CACHE_TTL=1800 \
+          quay.io/devops/docker-registry:latest
+        RemainAfterExit=true
+        Type=oneshot
+    - name: flannel.service
       command: start
+      content: |
+        [Unit]
+        Wants=etcd-waiter.service
+        After=etcd-waiter.service
+        Requires=etcd.service
+        After=etcd.service
+        After=network-online.target
+        Wants=network-online.target
+        Description=flannel is an etcd backed overlay network for containers
+
+        [Service]
+        Type=notify
+        ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+        ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/flanneld
+        ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
+        ExecStartPre=-/usr/bin/etcdctl mk /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "vxlan"}}'
+        ExecStart=/opt/bin/flanneld --iface=eth1
     - name: docker.service
       command: start
-      drop-ins:
-        - name: 51-docker-mirror.conf
-          content: |
-            [Unit]
-            # making sure that docker-cache is up and that flanneld finished
-            # startup, otherwise containers won't land in flannel's network...
-            Requires=docker-cache.service flanneld.service
-            After=docker-cache.service flanneld.service
-            [Service]
-            Environment=DOCKER_OPTS='--registry-mirror=http://$private_ipv4:5000'
-    - name: rpc-statd.service
-      command: start
-      enable: true
+      content: |
+        [Unit]
+        After=flannel.service
+        Wants=flannel.service
+        Description=Docker Application Container Engine
+        Documentation=http://docs.docker.io
+
+        [Service]
+        EnvironmentFile=/run/flannel/subnet.env
+        ExecStartPre=/bin/mount --make-rprivate /
+        ExecStart=/usr/bin/docker -d --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} -s=overlay -H fd://
+
+        [Install]
+        WantedBy=multi-user.target
     - name: kube-apiserver.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=etcd.service docker-cache.service
-        After=etcd.service docker-cache.service
+        Requires=etcd.service
+        Requires=fleet.service
+        After=fleet.service
+        After=docker.service
 
         [Service]
         ExecStartPre=-/usr/bin/mkdir -p /opt/bin
@@ -165,7 +172,7 @@ coreos:
         --address=0.0.0.0 \
         --port=8080 \
         --portal_net=10.100.0.0/16 \
-        --etcd_servers=http://127.0.0.1:2379 \
+        --etcd_servers=http://127.0.0.1:4001 \
         --public_address_override=172.17.8.101 \
         --logtostderr=true
         Restart=always
@@ -210,8 +217,6 @@ coreos:
         Documentation=https://github.com/kelseyhightower/kube-register
         Requires=kube-apiserver.service
         After=kube-apiserver.service
-        Requires=fleet.service
-        After=fleet.service
 
         [Service]
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/kube-register
@@ -222,6 +227,9 @@ coreos:
         --api-endpoint=http://127.0.0.1:8080
         Restart=always
         RestartSec=10
+    - name: rpc-statd.service
+      command: start
+      enable: true
   update:
     group: __CHANNEL__
     reboot-strategy: off

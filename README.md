@@ -150,11 +150,6 @@ Most aspects of your cluster setup can be customized with environment variables.
    by running `docker login <registry>.<domain>`. All nodes will get it automatically,
    at 'vagrant up', given any modification or update to that file.
 
- - **ETCD_CLUSTER_SIZE** sets the number of nodes in the default built-in etcd
-   cluster.
-
-   Defaults to **3** (or the total number of nodes of the cluster if lower).
-
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
    Defaults to latest released version.
