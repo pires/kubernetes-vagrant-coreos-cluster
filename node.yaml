@@ -163,7 +163,7 @@ coreos:
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-proxy
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-proxy
         ExecStart=/opt/bin/kube-proxy \
-        --etcd_servers=http://172.17.8.101:4001 \
+        --master=172.17.8.101:8080 \
         --logtostderr=true
         Restart=always
         RestartSec=10
