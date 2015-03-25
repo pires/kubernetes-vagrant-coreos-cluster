@@ -151,7 +151,8 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `0.13.1`.
+   Defaults to `0.13.2`.
+   Versions prior to `0.13.x` **won't work** with current cloud-config files.
 
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
