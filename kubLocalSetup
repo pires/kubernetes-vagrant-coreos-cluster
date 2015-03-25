@@ -1,13 +1,12 @@
 #!/bin/bash
 set -e
 
-PLATFORM="$(uname -s)"
+PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')
 KUBERNETES_VERSION=${KUBERNETES_VERSION:-0.13.2}
 [[ "${KUBERNETES_VERSION}" == "latest" ]] && \
   KUBERNETES_VERSION=$(curl --insecure -sS https://get.k8s.io | grep release= | sed -e 's,.*=v,,')
 
-KUB_URL="https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/$( \
-  echo ${PLATFORM} | tr '[:upper:]' '[:lower:]')/amd64/kubectl"
+KUB_URL="https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/${PLATFORM}/amd64/kubectl"
 
 scream () {
     cat <<< "$@" 1>&2
@@ -15,11 +14,7 @@ scream () {
 }
 
 case "$PLATFORM" in
-  Darwin)
-    targetDir="/usr/local/bin"
-    ;;
-  Linux)
-    # targetDir="/opt/bin"
+  darwin|linux)
     targetDir="/usr/local/bin"
     ;;
   *)
@@ -40,10 +35,9 @@ elif [[ "$#" -eq 1 && "$1" == "shellinit"  ]] ; then
     echo "Run './kubLocalSetup install' first."
     scream
   fi
-  echo "export ETCDCTL_PEERS=http://172.17.8.101:4001"
   echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001"
   echo "export KUBERNETES_MASTER=http://172.17.8.101:8080"
 else
-  echo "Usage: ./kubLocalSetup (install|shellinit|unistall)"
+  echo "Usage: ./kubLocalSetup (install|shellinit|uninstall)"
 fi
 
