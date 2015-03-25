@@ -15,13 +15,12 @@ cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
  * some needed userland
  	* **kubectl** (required to manage your kubernetes cluster)
  	* **fleetctl** (optional for *debugging* **[fleet](http://github.com/coreos/fleet)**)
- 	* **etcdctl** (optional for *debugging* **[etcd](http://github.com/coreos/fleet)**)
 
-### fleetctl, etcdctl, kubectl installation notes
+### fleetctl, kubectl installation notes
 
 - On **MacOS X** (and assuming you have [homebrew](http://brew.sh) already installed) run...
 
-   `brew install wget fleetctl etcdctl`
+   `brew install wget fleetctl`
 
 - Download the *kubectl* binary into */usr/local/bin*, which should be (and most
 probably is) set in your shell's *$PATH*...
