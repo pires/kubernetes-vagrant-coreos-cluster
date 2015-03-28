@@ -188,6 +188,8 @@ coreos:
         --hostname_override=$public_ipv4 \
         --api_servers=172.17.8.101:8080 \
         --allow_privileged=true \
+        --cluster_dns=10.100.0.10 \
+        --cluster_domain=pires-kube \
         --logtostderr=true
         Restart=always
         RestartSec=10

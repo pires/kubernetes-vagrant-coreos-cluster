@@ -1,0 +1,66 @@
+#!/bin/bash
+set -e
+
+PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')"
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-0.13.2}
+[[ "${KUBERNETES_VERSION}" == "latest" ]] && \
+  KUBERNETES_VERSION=$(curl --insecure -sS https://get.k8s.io | grep release= | sed -e 's,.*=v,,')
+
+KUB_URL="https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VERSION}/bin/${PLATFORM}/amd64/kubectl"
+
+scream () {
+    cat <<< "$@" 1>&2
+    exit 1
+}
+
+case "$PLATFORM" in
+  darwin|linux)
+    targetDir="/usr/local/bin"
+    ;;
+  *)
+    scream "Unknown or unsupported platform: ${PLATFORM}"
+    ;;
+esac
+
+if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
+  if [ -f ${targetDir}/kubectl ] ; then
+    echo "Cleaning-up.."
+    ${targetDir}/kubectl stop -f dns/dns-service.yaml
+    ${targetDir}/kubectl delete -f dns/dns-service.yaml
+    ${targetDir}/kubectl stop -f dns/dns-controller.yaml
+    ${targetDir}/kubectl delete -f dns/dns-controller.yaml
+    [ -f ${targetDir}/kubectl ] && sudo rm -f ${targetDir}/kubectl
+  fi
+
+  echo "Downloading and installing ${PLATFORM} version of kubectl (Kubernetes CLI) into ${targetDir}. This may take a couple minutes, depending on your internet speed.."
+  [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
+  sudo wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
+  [ -x ${targetDir}/kubectl ] || sudo chmod +x ${targetDir}/kubectl
+
+  echo "Setting environment variables.."
+  if ! grep -q 'export FLEETCTL_ENDPOINT' "~/.bash_profile" ; then
+    echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001" >> ~/.bash_profile
+  fi
+  if ! grep -q 'export KUBERNETES_MASTER' "~/.bash_profile" ; then
+    echo "export KUBERNETES_MASTER=http://172.17.8.101:8080" >> ~/.bash_profile
+  fi
+  export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
+  export KUBERNETES_MASTER=http://172.17.8.101:8080
+  
+  echo "Configuring DNS.."
+  ${targetDir}/kubectl create -f dns/dns-controller.yaml
+  ${targetDir}/kubectl create -f dns/dns-service.yaml
+  echo "DNS is being provisioned. You can check status by running ´kubectl get pods´."
+elif [[ "$#" -eq 1 && "$1" == "uninstall"  ]] ; then
+  if [ -f ${targetDir}/kubectl ] ; then
+    echo "Cleaning-up.."
+    ${targetDir}/kubectl delete -f dns/dns-controller.yaml
+    ${targetDir}/kubectl delete -f dns/dns-service.yaml
+    [ -f ${targetDir}/kubectl ] && sudo rm -f ${targetDir}/kubectl
+  else
+    echo "Nothing to clean-up."
+  fi
+else
+  echo "Usage: ./setup (install|uninstall)"
+fi
+
