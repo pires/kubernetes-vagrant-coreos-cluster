@@ -50,6 +50,7 @@ Kubernetes is ready. Now we now need to perform a few more steps, such as
 Just run
 ```
 ./setup install
+source ~/.bash_profile
 ```
 
 You may specify a different *kubectl* version via the `KUBERNETES_VERSION` environment variable (see [here](#customization) for details).
@@ -171,6 +172,7 @@ you which to mount the allowed syntax is...
 ```
 vagrant up
 ./setup install
+source ~/.bash_profile
 ```
 
 This will start one `master` and two `minion` nodes, download Kubernetes binaries start all needed services.
