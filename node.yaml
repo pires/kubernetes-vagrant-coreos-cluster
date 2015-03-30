@@ -133,29 +133,12 @@ coreos:
 
         [Install]
         WantedBy=multi-user.target
-    - name: cadvisor.service
-      command: start
-      content: |
-        [Unit]
-        Description=cAdvisor Service
-        After=docker.service
-        Requires=docker.service
-
-        [Service]
-        Restart=always
-        ExecStartPre=-/usr/bin/docker kill cadvisor
-        ExecStartPre=-/usr/bin/docker rm -f cadvisor
-        ExecStartPre=/usr/bin/docker pull google/cadvisor
-        ExecStart=/usr/bin/docker run --name cadvisor -v=/var/run:/var/run:rw -v=/sys:/sys:ro -v=/var/lib/docker/:/var/lib/docker:ro -p=4194:4194 google/cadvisor --logtostderr --port=4194
-        ExecStop=/usr/bin/docker stop -t 2 cadvisor
     - name: kube-proxy.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes Proxy
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        After=cadvisor.service
-        Requires=cadvisor.service
         Requires=kube-apiserver-waiter.service
         After=kube-apiserver-waiter.service
 
@@ -173,8 +156,6 @@ coreos:
         [Unit]
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        After=cadvisor.service
-        Requires=cadvisor.service
         Requires=kube-apiserver-waiter.service
         After=kube-apiserver-waiter.service
 
@@ -188,6 +169,7 @@ coreos:
         --hostname_override=$public_ipv4 \
         --api_servers=172.17.8.101:8080 \
         --allow_privileged=true \
+        --cadvisor_port=4194 \
         --cluster_dns=10.100.0.10 \
         --cluster_domain=pires-kube \
         --logtostderr=true
