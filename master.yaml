@@ -174,7 +174,8 @@ coreos:
         --portal_net=10.100.0.0/16 \
         --etcd_servers=http://127.0.0.1:4001 \
         --public_address_override=172.17.8.101 \
-        --logtostderr=true
+        --logtostderr=true \
+        --runtime_config=api/v1beta3
         Restart=always
         RestartSec=10
     - name: kube-controller-manager.service
