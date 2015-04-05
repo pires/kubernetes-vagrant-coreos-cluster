@@ -20,7 +20,10 @@ cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
 
 On **MacOS X** (and assuming you have [homebrew](http://brew.sh) already installed) run
 
-   `brew install wget fleetctl`
+```
+brew update
+brew install wget fleetctl
+```
 
 ## Deploy Kubernetes
 
@@ -31,8 +34,10 @@ vagrant up
 
 Verify if cluster is up & running
 ```
-fleetctl list-machines
+fleetctl --endpoint=http://172.17.8.101:4001 list-machines
 ```
+
+NOTE: Once the installation process is complete, you should not have to provide the `--endpoint` argument.
 
 You should see something like
 ```
