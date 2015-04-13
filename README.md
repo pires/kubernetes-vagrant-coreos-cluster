@@ -137,6 +137,10 @@ Most aspects of your cluster setup can be customized with environment variables.
    Defaults to `0.13.2`.
    Versions prior to `0.13.x` **won't work** with current cloud-config files.
 
+ - **CLOUD_PROVIDER** defines the specific cloud provider being used. This is useful, for instance, if you're relying on kubernetes to set load-balancers for your services.
+
+   Possible values are `gce`, `gke`, `aws`, `azure`, `vagrant`, `vsphere`, `libvirt-coreos` and `juju`. Defaults to `vagrant`.
+
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
 
