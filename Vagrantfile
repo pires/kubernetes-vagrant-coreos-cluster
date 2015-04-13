@@ -31,13 +31,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.13.2'
-# The following isn't true since latest as of the moment is 0.13.1 but script below says 0.10.1
-#if KUBERNETES_VERSION == "latest"
-#  url = "https://get.k8s.io"
-#  Object.redefine_const(:KUBERNETES_VERSION,
-#    open(url).read().scan(/release=.*/)[0].gsub('release=v', ''))
-#end
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.14.2'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
