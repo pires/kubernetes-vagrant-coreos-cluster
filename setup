@@ -2,7 +2,7 @@
 set -e
 
 PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')"
-KUBERNETES_VERSION=${KUBERNETES_VERSION:-0.13.2}
+KUBERNETES_VERSION=${KUBERNETES_VERSION:-0.14.2}
 [[ "${KUBERNETES_VERSION}" == "latest" ]] && \
   KUBERNETES_VERSION=$(curl --insecure -sS https://get.k8s.io | grep release= | sed -e 's,.*=v,,')
 
