@@ -12,62 +12,44 @@ cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
  	* **[Virtualbox](https://www.virtualbox.org)** (the default)
  	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
  	* **[VMware Fusion](http://www.vmware.com/products/fusion)** or **[VMware Workstation](http://www.vmware.com/products/workstation)**
- * some needed userland
- 	* **kubectl** (required to manage your kubernetes cluster)
- 	* **fleetctl** (optional for *debugging* **[fleet](http://github.com/coreos/fleet)**)
 
-### fleetctl
+### MacOS X
 
 On **MacOS X** (and assuming you have [homebrew](http://brew.sh) already installed) run
 
 ```
 brew update
-brew install wget fleetctl
+brew install wget
 ```
 
 ## Deploy Kubernetes
 
-Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_ and, by default, a couple VMs with everything needed to become Kubernetes minions. You can however change the number of minions by setting the **NUM_INSTANCES** environment variable (explained below).
+Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_ and, by default, a couple VMs with everything needed to become Kubernetes minions.
+You can change the number of minions and/or the Kubernetes version by setting environment variables **NUM_INSTANCES** and **KUBERNETES_VERSION**, respectively. [You can find more details below](#customization).
+
 ```
 vagrant up
 ```
 
-Verify if cluster is up & running
-```
-fleetctl --endpoint=http://172.17.8.101:4001 list-machines
-```
+Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal windo, run:
 
-NOTE: Once the installation process is complete, you should not have to provide the `--endpoint` argument.
-
-You should see something like
 ```
-MACHINE		IP		METADATA
-dd0ee115...	172.17.8.101	role=master
-74a8dc8c...	172.17.8.102	role=minion
-c93da9ff...	172.17.8.103    role=minion
-```
-
-Kubernetes is ready. Now we now need to perform a few more steps, such as
-* Install `kubectl` binary into */usr/local/bin* - this is needed for interacting with Kubernetes
-* Set some environment variables
-* Set-up Kubernetes DNS integration
-
-Just run
-```
-./setup install
 source ~/.bash_profile
 ```
 
-You may specify a different *kubectl* version via the `KUBERNETES_VERSION` environment variable (see [here](#customization) for details).
+New terminal windows will have this set for you.
 
 ## Clean-up
 
 ```
-./setup uninstall
 vagrant destroy
 ```
 
-If you've set `NUM_INSTANCES` or any other variable when deploying, please make sure you set it in `vagrant destroy` call above.
+If you've set `NUM_INSTANCES` or any other variable when deploying, please make sure you set it in `vagrant destroy` call above, like:
+
+```
+NUM_INSTANCES=3 vagrant destroy
+```
 
 ## Notes about hypervisors
 
@@ -89,9 +71,9 @@ Then just add ```--provider parallels``` to the ```vagrant up``` invocations abo
 ### VMware
 If you are using one of the **VMware** hypervisors you must **[buy](http://www.vagrantup.com/vmware)** the matching  provider and, depending on your case, just add either ```--provider vmware-fusion``` or ```--provider vmware-workstation``` to the ```vagrant up``` invocations above.
 
-## Private Repositories
+## Private Docker Repositories
 
-See **DOCKERCFG** bellow.
+If you want to use Docker private repositories look for **DOCKERCFG** bellow.
 
 ## Customization
 ### Environment variables
@@ -124,7 +106,7 @@ Most aspects of your cluster setup can be customized with environment variables.
  - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs.
 
    Defaults to **1**.
- - **DOCKERCFG** sets the location of your private docker repositories (and keys) configuration.
+ - **DOCKERCFG** sets the location of your private docker repositories (and keys) configuration. However, this is only usable if you set **USE_DOCKERCFG=true**.
 
    Defaults to "**~/.dockercfg**".
 
@@ -134,8 +116,8 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `0.14.2`.
-   Versions prior to `0.14.2` **won't work** with current cloud-config files.
+   Defaults to `0.15.0`.
+   Versions prior to `0.15.0` **won't work** with current cloud-config files.
 
  - **CLOUD_PROVIDER** defines the specific cloud provider being used. This is useful, for instance, if you're relying on kubernetes to set load-balancers for your services.
 
