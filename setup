@@ -25,6 +25,7 @@ esac
 if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
   if [ -f ${targetDir}/kubectl ] ; then
     echo "Cleaning-up.."
+
     ${targetDir}/kubectl stop -f dns/dns-service.yaml
     ${targetDir}/kubectl delete -f dns/dns-service.yaml
     ${targetDir}/kubectl stop -f dns/dns-controller.yaml
@@ -37,11 +38,12 @@ if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
   sudo wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
   [ -x ${targetDir}/kubectl ] || sudo chmod +x ${targetDir}/kubectl
 
+  # TODO use sed to replace current values, if any
   echo "Setting environment variables.."
-  if ! grep -q 'export FLEETCTL_ENDPOINT' "~/.bash_profile" ; then
+  if ! grep -q 'export FLEETCTL_ENDPOINT=http://172.17.8.101:4001' ~/.bash_profile ; then
     echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001" >> ~/.bash_profile
   fi
-  if ! grep -q 'export KUBERNETES_MASTER' "~/.bash_profile" ; then
+  if ! grep -q 'export KUBERNETES_MASTER=http://172.17.8.101:8080' ~/.bash_profile ; then
     echo "export KUBERNETES_MASTER=http://172.17.8.101:8080" >> ~/.bash_profile
   fi
   export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
