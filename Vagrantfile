@@ -33,6 +33,15 @@ DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.14.2'
 
+tempCloudProvider = (ENV['CLOUD_PROVIDER'].to_s.downcase)
+case tempCloudProvider
+when "gce", "gke", "aws", "azure", "vagrant", "sphere", "libvirt-coreos", "juju"
+  CLOUD_PROVIDER = tempCloudProvider
+else
+  CLOUD_PROVIDER = 'vagrant'
+end
+puts "Cloud provider: #{CLOUD_PROVIDER}"
+
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
   puts "============================================================================="
@@ -222,6 +231,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
+          sed -i "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
