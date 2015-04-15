@@ -175,7 +175,7 @@ coreos:
         --portal_net=10.100.0.0/16 \
         --etcd_servers=http://127.0.0.1:4001 \
         --public_address_override=172.17.8.101 \
-        --cloud_provider=__CLOUDPROVIDER__
+        --cloud_provider=__CLOUDPROVIDER__ \
         --logtostderr=true \
         --runtime_config=api/v1beta3
         Restart=always
