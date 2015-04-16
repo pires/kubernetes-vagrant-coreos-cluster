@@ -4,6 +4,7 @@
 require 'fileutils'
 require 'net/http'
 require 'open-uri'
+require 'json'
 
 class Module
   def redefine_const(name, value)
@@ -29,9 +30,10 @@ Vagrant.require_version ">= 1.6.0"
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
+USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.14.2'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.15.0'
 
 tempCloudProvider = (ENV['CLOUD_PROVIDER'].to_s.downcase)
 case tempCloudProvider
@@ -40,7 +42,6 @@ when "gce", "gke", "aws", "azure", "vagrant", "sphere", "libvirt-coreos", "juju"
 else
   CLOUD_PROVIDER = 'vagrant'
 end
-puts "Cloud provider: #{CLOUD_PROVIDER}"
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
@@ -70,6 +71,11 @@ MASTER_CPUS = ENV['MASTER_CPUS'] || 1
 NODE_MEM= ENV['NODE_MEM'] || 1024
 NODE_CPUS = ENV['NODE_CPUS'] || 1
 
+BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
+
+DNS_DOMAIN = ENV['DNS_DOMAIN'] || "k8s.local"
+DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
+
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 
@@ -93,11 +99,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "coreos-#{CHANNEL}"
   config.vm.box_version = ">= #{COREOS_VERSION}"
   config.vm.box_url = "#{upstream}/coreos_production_vagrant.json"
-
-  config.trigger.after [:up, :resume] do
-    info "making sure ssh agent has the default vagrant key..."
-    system "ssh-add ~/.vagrant.d/insecure_private_key"
-  end
 
   ["vmware_fusion", "vmware_workstation"].each do |vmware|
     config.vm.provider vmware do |v, override|
@@ -132,6 +133,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       cfg = MASTER_YAML
       memory = MASTER_MEM
       cpus = MASTER_CPUS
+      MASTER_IP="#{BASE_IP_ADDR}.#{i+100}"
     else
       hostname = "node-%02d" % (i - 1)
       cfg = NODE_YAML
@@ -141,6 +143,68 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.define vmName = hostname do |kHost|
       kHost.vm.hostname = vmName
+      # vagrant-triggers has no concept of global triggers so to avoid having
+      # then to run as many times as the total number of VMs we only call them
+      # in the master (re: emyl/vagrant-triggers#13)...
+      if vmName == "master"
+        kHost.trigger.before [:up, :provision] do
+          info "Setting Kubernetes version #{KUBERNETES_VERSION}"
+          system <<-EOT.prepend("\n\n") + "\n"
+             sed -e "s|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g" \
+             setup.tmpl > temp/setup
+             chmod +x temp/setup
+          EOT
+          info "Making sure 'kubectl' matches the Kubernetes version we just bootstrapped..."
+          system "./temp/setup install"
+        end
+        kHost.trigger.after [:up, :resume] do
+          info "Sanitizing stuff..."
+          system "ssh-add ~/.vagrant.d/insecure_private_key"
+          system "rm -rf ~/.fleetctl/known_hosts"
+        end
+        kHost.trigger.after [:up] do
+          info "Waiting for Kubernetes master to become ready..."
+          system <<-EOT.prepend("\n\n") + "\n"
+            until curl -o /dev/null -sIf http://#{MASTER_IP}:8080; do \
+              sleep 1;
+            done;
+          EOT
+          info "Configuring Kubernetes cluster DNS..."
+          system <<-EOT.prepend("\n\n") + "\n"
+            cd dns
+            sed -e "s|__MASTER_IP__|#{MASTER_IP}|g" \
+                -e "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" \
+                -e "s|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g" \
+              dns-controller.yaml.tmpl > ../temp/dns-controller.yaml
+            cd ..
+            kubectl create -f temp/dns-controller.yaml
+            kubectl create -f dns/dns-service.yaml
+          EOT
+        end
+        system <<-EOT.prepend("\n\n") + "\n"
+          # wait 10 seconds for kube-register to run
+          sleep 10;
+        EOT
+      end
+
+      if vmName == "node-%02d" % (i - 1)
+        kHost.trigger.after [:up] do
+          info "Waiting for Kubernetes minion [node-%02d" % (i - 1) + "] to become ready..."
+          system <<-EOT.prepend("\n\n") + "\n"
+            until curl -o /dev/null -sIf http://#{BASE_IP_ADDR}.#{i+100}:10250; do \
+              sleep 1;
+            done;
+          EOT
+          # wait 10 seconds for kubelet to register healthz projects
+          sleep 10;
+        end
+      end
+
+      kHost.trigger.before [:destroy] do
+        system <<-EOT.prepend("\n\n") + "\n"
+          rm -f temp/*
+        EOT
+      end
 
       if SERIAL_LOGGING
         logdir = File.join(File.dirname(__FILE__), "log")
@@ -183,7 +247,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
       end
 
-      kHost.vm.network :private_network, ip: "172.17.8.#{i+100}"
+      kHost.vm.network :private_network, ip: "#{BASE_IP_ADDR}.#{i+100}"
       # you can override this in synced_folders.yaml
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
 
@@ -214,7 +278,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       rescue
       end
 
-      if File.exist?(DOCKERCFG)
+      if USE_DOCKERCFG && File.exist?(DOCKERCFG)
         kHost.vm.provision :file, run: "always",
          :source => "#{DOCKERCFG}", :destination => "/home/core/.dockercfg"
 
@@ -232,6 +296,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
           sed -i "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
+          sed -i "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end

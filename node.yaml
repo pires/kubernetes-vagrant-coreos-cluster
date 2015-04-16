@@ -10,7 +10,7 @@ write-files:
     owner: root
     content: |
       #! /usr/bin/bash
-      until curl http://172.17.8.101:4001/v2/machines; do sleep 2; done
+      until curl http://172.17.8.101:2379/v2/machines; do sleep 2; done
   - path: /opt/bin/docker-cache-waiter.sh
     owner: root
     content: |
@@ -24,12 +24,19 @@ write-files:
 coreos:
   fleet:
     public-ip: $public_ipv4
-    etcd_servers: http://172.17.8.101:4001
+    etcd_servers: http://172.17.8.101:2379
     metadata: "role=minion"
   flannel:
+    etcd-endpoints: http://172.17.8.101:2379
     interface: eth1
   units:
-    - name: etcd.service
+    - name: rpcbind.service
+      enable: true
+      command: start
+    - name: rpc-statd.service
+      enable: true
+      command: start
+    - name: etcd2.service
       mask: true
     - name: etcd-waiter.service
       command: start
@@ -70,20 +77,6 @@ coreos:
         ExecStart=/usr/bin/bash /opt/bin/kube-apiserver-waiter.sh
         RemainAfterExit=true
         Type=oneshot
-    - name: fleet.service
-      command: start
-      content: |
-        [Unit]
-        Description=fleet daemon
-        Wants=fleet.socket
-        After=fleet.socket
-        Wants=etcd-waiter.service
-        After=etcd-waiter.service
-
-        [Service]
-        ExecStart=/usr/bin/fleetd
-        Restart=always
-        RestartSec=10s
     - name: setup-network-environment.service
       command: start
       content: |
@@ -100,39 +93,22 @@ coreos:
         ExecStart=/opt/bin/setup-network-environment
         RemainAfterExit=yes
         Type=oneshot
-    - name: flannel.service
+    - name: flanneld.service
       command: start
-      content: |
-        [Unit]
-        Requires=setup-network-environment.service
-        After=setup-network-environment.service
-        Wants=etcd-waiter.service
-        After=etcd-waiter.service
-
-        [Service]
-        Type=notify
-        ExecStartPre=/usr/bin/mkdir -p /opt/bin
-        ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/flanneld
-        ExecStartPre=/usr/bin/chmod +x /opt/bin/flanneld
-        ExecStart=/opt/bin/flanneld --iface=eth1 --etcd-endpoints http://172.17.8.101:4001
+    - name: fleet.service
+      command: start
     - name: docker.service
       command: start
-      content: |
-        [Unit]
-        After=flannel.service
-        Wants=flannel.service
-        Requires=docker-cache-waiter.service
-        After=docker-cache-waiter.service
-        Description=Docker Application Container Engine
-        Documentation=http://docs.docker.io
-
-        [Service]
-        EnvironmentFile=/run/flannel/subnet.env
-        ExecStartPre=/bin/mount --make-rprivate /
-        ExecStart=/usr/bin/docker --registry-mirror=http://172.17.8.101:5000 -d --bip=${FLANNEL_SUBNET} --mtu=${FLANNEL_MTU} -s=overlay -H fd://
-
-        [Install]
-        WantedBy=multi-user.target
+      drop-ins:
+        - name: 51-docker-mirror.conf
+          content: |
+            [Unit]
+            # making sure that flanneld finished startup, otherwise containers
+            # won't land in flannel's network...
+            Require=docker-cache.service flanneld.service
+            After=docker-cache.service flanneld.service
+            [Service]
+            Environment=DOCKER_OPTS='--registry-mirror=http://172.17.8.101:5000'
     - name: kube-proxy.service
       command: start
       content: |
@@ -146,8 +122,8 @@ coreos:
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-proxy
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-proxy
         ExecStart=/opt/bin/kube-proxy \
-        --master=172.17.8.101:8080 \
-        --logtostderr=true
+          --master=172.17.8.101:8080 \
+          --logtostderr=true
         Restart=always
         RestartSec=10
     - name: kube-kubelet.service
@@ -164,20 +140,19 @@ coreos:
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kubelet
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
         ExecStart=/opt/bin/kubelet \
-        --address=0.0.0.0 \
-        --port=10250 \
-        --hostname_override=$public_ipv4 \
-        --api_servers=172.17.8.101:8080 \
-        --allow_privileged=true \
-        --cadvisor_port=4194 \
-        --cluster_dns=10.100.0.10 \
-        --cluster_domain=pires-kube \
-        --logtostderr=true
+          --address=0.0.0.0 \
+          --port=10250 \
+          --hostname_override=$public_ipv4 \
+          --api_servers=172.17.8.101:8080 \
+          --allow_privileged=true \
+          --cluster_dns=10.100.0.10 \
+          --cluster_domain=__DNS_DOMAIN__ \
+          --logtostderr=true \
+          --cadvisor_port=4194 \
+          --healthz_bind_address=0.0.0.0 \
+          --healthz_port=10248
         Restart=always
         RestartSec=10
-    - name: rpc-statd.service
-      command: start
-      enable: true
   update:
     group: __CHANNEL__
     reboot-strategy: off
