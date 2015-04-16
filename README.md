@@ -162,7 +162,6 @@ you which to mount the allowed syntax is...
 
 ```
 vagrant up
-./setup install
 source ~/.bash_profile
 ```
 
