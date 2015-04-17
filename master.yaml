@@ -14,9 +14,14 @@ write-files:
 
 coreos:
   etcd2:
-    name: k8s_master
-    initial-cluster-token: k8s_etcd
+    name: __NAME__
     listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
+    advertise-client-urls: http://$public_ipv4:2379,http://$public_ipv4:4001
+    initial-cluster-token: k8s_etcd
+    listen-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
+    initial-advertise-peer-urls: http://$private_ipv4:2380
+    initial-cluster: __ETCD_SEED_CLUSTER__
+    initial-cluster-state: new
   fleet:
     public-ip: $public_ipv4
     etcd-servers: http://127.0.0.1:2379
@@ -88,6 +93,8 @@ coreos:
             -e MIRROR_SOURCE_INDEX=https://index.docker.io \
             -e MIRROR_TAGS_CACHE_TTL=1800 \
             quay.io/devops/docker-registry:latest
+    - name: fleet.service
+      command: start
     - name: flanneld.service
       command: start
       drop-ins:
