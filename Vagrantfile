@@ -152,6 +152,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
           system <<-EOT.prepend("\n\n") + "\n"
              sed -e "s|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g" \
+                 -e "s|__MASTER_IP__|#{MASTER_IP}|g" \
              setup.tmpl > temp/setup
              chmod +x temp/setup
           EOT
@@ -297,6 +298,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
           sed -i "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
+          sed -i "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data

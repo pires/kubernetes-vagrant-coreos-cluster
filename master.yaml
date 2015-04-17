@@ -6,11 +6,16 @@ write-files:
     permissions: '0644'
     content: |
       OPTS_RPC_MOUNTD=""
-  - path: /opt/bin/waiter.sh
-    owner: root
+  - path: /opt/bin/wupiao
+    permissions: '0755'
     content: |
-      #! /usr/bin/bash
-      until curl http://127.0.0.1:2379/v2/machines; do sleep 2; done
+      #!/bin/bash
+      # [w]ait [u]ntil [p]ort [i]s [a]ctually [o]pen
+      [ -n "$1" ] && \
+        until curl -o /dev/null -sIf http://${1}; do \
+          sleep 1 && echo .;
+        done;
+      exit $?
 
 coreos:
   etcd2:
@@ -24,7 +29,6 @@ coreos:
     initial-cluster-state: new
   fleet:
     public-ip: $public_ipv4
-    etcd-servers: http://127.0.0.1:2379
     metadata: "role=master"
   flannel:
     interface: eth1
@@ -43,29 +47,12 @@ coreos:
         Documentation=https://github.com/kelseyhightower/setup-network-environment
         Requires=network-online.target
         After=network-online.target
-
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /opt/bin
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/setup-network-environment
         ExecStartPre=/usr/bin/chmod +x /opt/bin/setup-network-environment
         ExecStart=/opt/bin/setup-network-environment
         RemainAfterExit=yes
-        Type=oneshot
-    - name: etcd-waiter.service
-      command: start
-      content: |
-        [Unit]
-        Description=etcd waiter
-        Wants=network-online.target
-        Wants=etcd2.service
-        After=etcd2.service
-        After=network-online.target
-        Before=flannel.service
-
-        [Service]
-        ExecStartPre=/usr/bin/chmod +x /opt/bin/waiter.sh
-        ExecStart=/usr/bin/bash /opt/bin/waiter.sh
-        RemainAfterExit=true
         Type=oneshot
     - name: docker-cache.service
       command: start
@@ -87,12 +74,12 @@ coreos:
         # GUNICORN_OPTS is an workaround for
         # https://github.com/docker/docker-registry/issues/892
         ExecStart=/usr/bin/docker run --rm --net host --name docker-registry \
-            -e STANDALONE=false \
-            -e GUNICORN_OPTS=[--preload] \
-            -e MIRROR_SOURCE=https://registry-1.docker.io \
-            -e MIRROR_SOURCE_INDEX=https://index.docker.io \
-            -e MIRROR_TAGS_CACHE_TTL=1800 \
-            quay.io/devops/docker-registry:latest
+          -e STANDALONE=false \
+          -e GUNICORN_OPTS=[--preload] \
+          -e MIRROR_SOURCE=https://registry-1.docker.io \
+          -e MIRROR_SOURCE_INDEX=https://index.docker.io \
+          -e MIRROR_TAGS_CACHE_TTL=1800 \
+          quay.io/devops/docker-registry:latest
     - name: fleet.service
       command: start
     - name: flanneld.service
@@ -128,18 +115,19 @@ coreos:
         ExecStartPre=-/usr/bin/mkdir -p /opt/bin
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-apiserver
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-apiserver
+        ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
         ExecStart=/opt/bin/kube-apiserver \
-        --allow_privileged=true \
-        --insecure_bind_address=0.0.0.0 \
-        --insecure_port=8080 \
-        --kubelet_https=true \
-        --secure_port=6443 \
-        --portal_net=10.100.0.0/16 \
-        --etcd_servers=http://127.0.0.1:2379 \
-        --public_address_override=172.17.8.101 \
-        --cloud_provider=__CLOUDPROVIDER__ \
-        --logtostderr=true \
-        --runtime_config=api/v1beta3
+          --allow_privileged=true \
+          --insecure_bind_address=0.0.0.0 \
+          --insecure_port=8080 \
+          --kubelet_https=true \
+          --secure_port=6443 \
+          --portal_net=10.100.0.0/16 \
+          --etcd_servers=http://$private_ipv4:2379 \
+          --public_address_override=$public_ipv4 \
+          --cloud_provider=__CLOUDPROVIDER__ \
+          --logtostderr=true \
+          --runtime_config=api/v1beta3
         Restart=always
         RestartSec=10
     - name: kube-controller-manager.service
@@ -153,6 +141,7 @@ coreos:
         [Service]
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-controller-manager
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-controller-manager
+        ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
         ExecStart=/opt/bin/kube-controller-manager \
           --master=$private_ipv4:8080 \
           --cloud_provider=__CLOUDPROVIDER__ \
@@ -173,7 +162,9 @@ coreos:
         [Service]
         ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-scheduler
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-scheduler
-        ExecStart=/opt/bin/kube-scheduler --master=127.0.0.1:8080
+        ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
+        ExecStart=/opt/bin/kube-scheduler \
+          --master=$private_ipv4:8080
         Restart=always
         RestartSec=10
     - name: kube-register.service
@@ -188,11 +179,12 @@ coreos:
         # ExecStartPre=/usr/bin/wget -N -P /opt/bin https://storage.googleapis.com/k8s/kube-register
         ExecStartPre=/usr/bin/wget -N -O /opt/bin/kube-register https://github.com/kelseyhightower/kube-register/releases/download/v0.0.2/kube-register-0.0.2-linux-amd64
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-register
+        ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
         ExecStart=/opt/bin/kube-register \
-        --metadata=role=minion \
-        --fleet-endpoint=unix:///var/run/fleet.sock \
-        --api-endpoint=http://127.0.0.1:8080 \
-        --healthz-port=10248
+          --metadata=role=minion \
+          --fleet-endpoint=unix:///var/run/fleet.sock \
+          --api-endpoint=http://$private_ipv4:8080 \
+          --healthz-port=10248
         Restart=always
         RestartSec=10
   update:

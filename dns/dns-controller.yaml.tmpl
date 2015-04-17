@@ -23,13 +23,13 @@ desiredState:
           - name: kube2sky
             image: gcr.io/google_containers/kube2sky:1.1
             command: [
-                    "-etcd-server=http://__MASTER_IP__:4001",
+                    "-etcd-server=http://__MASTER_IP__:2379",
                     "-domain=__DNS_DOMAIN__",
             ]
           - name: skydns
             image: gcr.io/google_containers/skydns:2015-03-11-001
             command: [
-                    "-machines=http://__MASTER_IP__:4001",
+                    "-machines=http://__MASTER_IP__:2379",
                     "-addr=0.0.0.0:53",
                     "-domain=__DNS_DOMAIN__",
                     "-nameservers=__DNS_UPSTREAM_SERVERS__",
