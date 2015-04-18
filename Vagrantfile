@@ -183,10 +183,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             kubectl create -f dns/dns-service.yaml
           EOT
         end
-        system <<-EOT.prepend("\n\n") + "\n"
-          # wait 10 seconds for kube-register to run
-          sleep 10;
-        EOT
       end
 
       if vmName == "node-%02d" % (i - 1)
@@ -197,8 +193,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               sleep 1;
             done;
           EOT
-          # wait 10 seconds for kubelet to register healthz projects
-          sleep 10;
         end
       end
 
