@@ -20,16 +20,24 @@ desiredState:
         id: k8s-dns
         dnsPolicy: "Default"  # Don't use cluster DNS.
         containers:
+          - name: etcd
+            image: quay.io/coreos/etcd:v2.0.3
+            command: [
+                    # entrypoint = "/etcd",
+                    "-listen-client-urls=http://0.0.0.0:2379,http://0.0.0.0:4001",
+                    "-initial-cluster-token=skydns-etcd",
+                    "-advertise-client-urls=http://127.0.0.1:4001",
+            ]
           - name: kube2sky
             image: gcr.io/google_containers/kube2sky:1.1
             command: [
-                    "-etcd-server=http://__MASTER_IP__:2379",
+                    "-etcd-server=http://127.0.0.1:4001",
                     "-domain=__DNS_DOMAIN__",
             ]
           - name: skydns
             image: gcr.io/google_containers/skydns:2015-03-11-001
             command: [
-                    "-machines=http://__MASTER_IP__:2379",
+                    "-machines=http://127.0.0.1:4001",
                     "-addr=0.0.0.0:53",
                     "-domain=__DNS_DOMAIN__",
                     "-nameservers=__DNS_UPSTREAM_SERVERS__",
