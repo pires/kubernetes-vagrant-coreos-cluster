@@ -184,7 +184,7 @@ coreos:
           --metadata=role=minion \
           --fleet-endpoint=unix:///var/run/fleet.sock \
           --api-endpoint=http://$private_ipv4:8080 \
-          --healthz-port=10255
+          --healthz-port=10248
         Restart=always
         RestartSec=10
   update:

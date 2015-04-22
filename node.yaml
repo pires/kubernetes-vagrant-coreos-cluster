@@ -110,7 +110,7 @@ coreos:
           --logtostderr=true \
           --cadvisor_port=4194 \
           --healthz_bind_address=0.0.0.0 \
-          --healthz_port=10255
+          --healthz_port=10248
         Restart=always
         RestartSec=10
   update:
