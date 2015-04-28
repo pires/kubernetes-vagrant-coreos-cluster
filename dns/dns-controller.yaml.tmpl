@@ -1,23 +1,23 @@
 kind: ReplicationController
 apiVersion: v1beta1
-id: k8s-dns
+id: kube-dns
 namespace: default
 labels:
-  k8s-app: k8s-dns
+  k8s-app: kube-dns
   kubernetes.io/cluster-service: "true"
 desiredState:
   replicas: 1
   replicaSelector:
-    k8s-app: k8s-dns
+    k8s-app: kube-dns
   podTemplate:
     labels:
-      name: k8s-dns
-      k8s-app: k8s-dns
+      name: kube-dns
+      k8s-app: kube-dns
       kubernetes.io/cluster-service: "true"
     desiredState:
       manifest:
         version: v1beta2
-        id: k8s-dns
+        id: kube-dns
         dnsPolicy: "Default"  # Don't use cluster DNS.
         containers:
           - name: etcd
@@ -29,7 +29,7 @@ desiredState:
                     "-advertise-client-urls=http://127.0.0.1:4001",
             ]
           - name: kube2sky
-            image: gcr.io/google_containers/kube2sky:1.1
+            image: gcr.io/google_containers/kube2sky:1.2
             command: [
                     "-etcd-server=http://127.0.0.1:4001",
                     "-domain=__DNS_DOMAIN__",
