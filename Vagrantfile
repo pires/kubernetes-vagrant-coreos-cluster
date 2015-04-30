@@ -56,7 +56,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.15.0'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.16.0'
 
 tempCloudProvider = (ENV['CLOUD_PROVIDER'].to_s.downcase)
 case tempCloudProvider
@@ -197,7 +197,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             rescue
               sleep 10
             end
-            puts "Checking master http://#{uri.host}:#{uri.port} ..."
             break if res.is_a? Net::HTTPSuccess or j >= 50
           end
           info "Configuring Kubernetes cluster DNS..."
@@ -228,7 +227,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             rescue
               sleep 10
             end
-            puts "Checking node-%02d" % (i - 1) + " http://#{uri.host}:#{uri.port} ..."
             break if hasResponse or j >= 50
           end
         end
