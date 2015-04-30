@@ -189,11 +189,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
         kHost.trigger.after [:up] do
           info "Waiting for Kubernetes master to become ready..."
-          system <<-EOT.prepend("\n\n") + "\n"
-            until curl -o /dev/null -sIf http://#{MASTER_IP}:8080; do \
-              sleep 1;
-            done;
-          EOT
+          j, uri, res = 0, URI("http://#{MASTER_IP}:8080"), nil
+          loop do
+            j += 1
+            begin
+              res = Net::HTTP.get_response(uri)
+            rescue
+              sleep 10
+            end
+            puts "Checking master http://#{uri.host}:#{uri.port} ..."
+            break if res.is_a? Net::HTTPSuccess or j >= 50
+          end
           info "Configuring Kubernetes cluster DNS..."
           system <<-EOT.prepend("\n\n") + "\n"
             cd dns
@@ -211,11 +217,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       if vmName == "node-%02d" % (i - 1)
         kHost.trigger.after [:up] do
           info "Waiting for Kubernetes minion [node-%02d" % (i - 1) + "] to become ready..."
-          system <<-EOT.prepend("\n\n") + "\n"
-            until curl -o /dev/null -sIf http://#{BASE_IP_ADDR}.#{i+100}:10250; do \
-              sleep 1;
-            done;
-          EOT
+          j, uri, hasResponse = 0, URI("http://#{BASE_IP_ADDR}.#{i+100}:10250"), false
+          loop do
+            j += 1
+            begin
+              res = Net::HTTP.get_response(uri)
+              hasResponse = true
+            rescue Net::HTTPBadResponse
+              hasResponse = true
+            rescue
+              sleep 10
+            end
+            puts "Checking node-%02d" % (i - 1) + " http://#{uri.host}:#{uri.port} ..."
+            break if hasResponse or j >= 50
+          end
         end
       end
 
