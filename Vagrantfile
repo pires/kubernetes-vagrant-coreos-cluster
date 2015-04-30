@@ -207,9 +207,26 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                 -e "s|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g" \
               dns-controller.yaml.tmpl > ../temp/dns-controller.yaml
             cd ..
-            kubectl create -f temp/dns-controller.yaml
-            kubectl create -f dns/dns-service.yaml
           EOT
+
+          res, uri.path = nil, '/api/v1beta1/replicationControllers/kube-dns'
+          begin
+            res = Net::HTTP.get_response(uri)
+          rescue
+          end
+          if not res.is_a? Net::HTTPSuccess
+            system "kubectl create -f temp/dns-controller.yaml"
+          end
+
+          res, uri.path = nil, '/api/v1beta1/services/kube-dns'
+          begin
+            res = Net::HTTP.get_response(uri)
+          rescue
+          end
+          if not res.is_a? Net::HTTPSuccess
+            system "kubectl create -f dns/dns-service.yaml"
+          end
+
         end
       end
 
