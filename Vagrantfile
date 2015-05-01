@@ -58,14 +58,6 @@ DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.16.0'
 
-tempCloudProvider = (ENV['CLOUD_PROVIDER'].to_s.downcase)
-case tempCloudProvider
-when "gce", "gke", "aws", "azure", "vagrant", "sphere", "libvirt-coreos", "juju"
-  CLOUD_PROVIDER = tempCloudProvider
-else
-  CLOUD_PROVIDER = 'vagrant'
-end
-
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
   puts "============================================================================="
@@ -102,6 +94,12 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
+
+CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
+validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
+  'libvirt-coreos', 'juju' ]
+Object.redefine_const(:CLOUD_PROVIDER,
+  'vagrant') unless validCloudProviders.include?(CLOUD_PROVIDER)
 
 (1..(NUM_INSTANCES.to_i + 1)).each do |i|
   case i
