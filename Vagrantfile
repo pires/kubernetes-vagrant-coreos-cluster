@@ -172,16 +172,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       if vmName == "master"
         kHost.trigger.before [:up, :provision] do
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
+          sedInplaceArg = OS.mac? ? " ''" : ""
           system "cp setup.tmpl temp/setup"
-          system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i ./temp/setup"
-          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i ./temp/setup"
+          system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i#{sedInplaceArg} ./temp/setup"
+          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/setup"
           system "chmod +x temp/setup"
           
           info "Configuring Kubernetes cluster DNS..."
           system "cp dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
-          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i ./temp/dns-controller.yaml"
-          system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i ./temp/dns-controller.yaml"
-          system "sed -e 's|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g' -i ./temp/dns-controller.yaml"
+          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
+          system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
+          system "sed -e 's|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
         end
 
         if OS.windows?
