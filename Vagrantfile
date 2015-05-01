@@ -31,12 +31,11 @@ module OS
   end
 end
 
+required_plugins = %w(vagrant-triggers)
 if OS.windows?
-  puts "You're running an unsupported platform. Exiting.."
-  exit
+  required_plugins.push('vagrant-winnfsd')
 end
 
-required_plugins = %w(vagrant-triggers)
 required_plugins.each do |plugin|
   need_restart = false
   unless Vagrant.has_plugin? plugin
@@ -173,21 +172,38 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       if vmName == "master"
         kHost.trigger.before [:up, :provision] do
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
-          system <<-EOT.prepend("\n\n") + "\n"
-             sed -e "s|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g" \
-                 -e "s|__MASTER_IP__|#{MASTER_IP}|g" \
-             setup.tmpl > temp/setup
-             chmod +x temp/setup
-          EOT
-          info "Making sure 'kubectl' matches the Kubernetes version we just bootstrapped..."
-          system "./temp/setup install"
+          system "cp setup.tmpl temp/setup"
+          system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i ./temp/setup"
+          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i ./temp/setup"
+          system "chmod +x temp/setup"
+          
+          info "Configuring Kubernetes cluster DNS..."
+          system "cp dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
+          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i ./temp/dns-controller.yaml"
+          system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i ./temp/dns-controller.yaml"
+          system "sed -e 's|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g' -i ./temp/dns-controller.yaml"
         end
+
+        if OS.windows?
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+        end
+
         kHost.trigger.after [:up, :resume] do
           info "Sanitizing stuff..."
           system "ssh-add ~/.vagrant.d/insecure_private_key"
           system "rm -rf ~/.fleetctl/known_hosts"
         end
+        
         kHost.trigger.after [:up] do
+          info "Installing kubectl for the kubernetes version we just bootstrapped..."
+          if OS.windows?
+            run_remote "/bin/sh /home/core/kubectlsetup install"
+          else
+            system "./temp/setup install"
+          end
+
           info "Waiting for Kubernetes master to become ready..."
           j, uri, res = 0, URI("http://#{MASTER_IP}:8080"), nil
           loop do
@@ -199,15 +215,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
             break if res.is_a? Net::HTTPSuccess or j >= 50
           end
-          info "Configuring Kubernetes cluster DNS..."
-          system <<-EOT.prepend("\n\n") + "\n"
-            cd dns
-            sed -e "s|__MASTER_IP__|#{MASTER_IP}|g" \
-                -e "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" \
-                -e "s|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g" \
-              dns-controller.yaml.tmpl > ../temp/dns-controller.yaml
-            cd ..
-          EOT
 
           res, uri.path = nil, '/api/v1beta1/replicationControllers/kube-dns'
           begin
@@ -215,7 +222,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           rescue
           end
           if not res.is_a? Net::HTTPSuccess
-            system "kubectl create -f temp/dns-controller.yaml"
+            if OS.windows?
+              run_remote "/opt/bin/kubectl create -f /home/core/dns-controller.yaml"
+            else
+              system "kubectl create -f temp/dns-controller.yaml"
+            end
           end
 
           res, uri.path = nil, '/api/v1beta1/services/kube-dns'
@@ -224,7 +235,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           rescue
           end
           if not res.is_a? Net::HTTPSuccess
-            system "kubectl create -f dns/dns-service.yaml"
+            if OS.windows?
+              run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
+            else
+              system "kubectl create -f dns/dns-service.yaml"
+            end
           end
 
         end
