@@ -123,6 +123,13 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    [Possible values are `gce`, `gke`, `aws`, `azure`, `vagrant`, `vsphere`, `libvirt-coreos` and `juju`](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/cluster/kube-env.sh#L17). Defaults to `vagrant`.
 
+ - **FLANNEL_IF** defines the name of the Ethernet device inside the CoreOS guest
+
+   Defaults to `eth1`
+
+   The name of Ethernet devices inside the guest OS is controlled by `systemd`. On VirtualBox, the second device is `eth1`, but on VMware Fusion it is named `ens34`.
+
+
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
 

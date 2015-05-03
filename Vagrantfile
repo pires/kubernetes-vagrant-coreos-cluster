@@ -95,6 +95,7 @@ NODE_MEM= ENV['NODE_MEM'] || 1024
 NODE_CPUS = ENV['NODE_CPUS'] || 1
 
 BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
+FLANNEL_IF = ENV['FLANNEL_IF'] || "eth1"
 
 DNS_DOMAIN = ENV['DNS_DOMAIN'] || "k8s.local"
 DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
@@ -348,6 +349,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__FLANNEL_IF__|#{FLANNEL_IF}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
