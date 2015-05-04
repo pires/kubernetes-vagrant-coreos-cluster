@@ -31,6 +31,8 @@ You can change the number of minions and/or the Kubernetes version by setting en
 vagrant up
 ```
 
+### *nix host
+
 Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal windo, run:
 
 ```
@@ -38,6 +40,15 @@ source ~/.bash_profile
 ```
 
 New terminal windows will have this set for you.
+
+### Windows host
+
+On windows kubectl is installed on the master node in the ```/opt/bin``` directory. To manage your kubernetes cluster, ssh into the master node and run kubectl from there.
+
+```
+vagrant ssh master
+kubectl cluster-info
+```
 
 ## Clean-up
 
@@ -164,6 +175,9 @@ you which to mount the allowed syntax is...
 # if the mount is enabled or disabled by default. default is `true`.
   disabled: false
 ```
+
+#### Windows
+For windows the [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) is installed to enable nfs shares.
 
 ## TL;DR
 
