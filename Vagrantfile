@@ -55,15 +55,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.16.0'
-
-tempCloudProvider = (ENV['CLOUD_PROVIDER'].to_s.downcase)
-case tempCloudProvider
-when "gce", "gke", "aws", "azure", "vagrant", "sphere", "libvirt-coreos", "juju"
-  CLOUD_PROVIDER = tempCloudProvider
-else
-  CLOUD_PROVIDER = 'vagrant'
-end
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.16.1'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
@@ -94,12 +86,19 @@ NODE_MEM= ENV['NODE_MEM'] || 1024
 NODE_CPUS = ENV['NODE_CPUS'] || 1
 
 BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
+FLANNEL_IF = ENV['FLANNEL_IF'] || "eth1"
 
 DNS_DOMAIN = ENV['DNS_DOMAIN'] || "k8s.local"
 DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
+
+CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
+validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
+  'libvirt-coreos', 'juju' ]
+Object.redefine_const(:CLOUD_PROVIDER,
+  'vagrant') unless validCloudProviders.include?(CLOUD_PROVIDER)
 
 (1..(NUM_INSTANCES.to_i + 1)).each do |i|
   case i
@@ -364,6 +363,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__FLANNEL_IF__|#{FLANNEL_IF}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
