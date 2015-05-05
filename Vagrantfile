@@ -56,7 +56,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.16.1'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.16.2'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
