@@ -31,7 +31,7 @@ coreos:
     public-ip: $public_ipv4
     metadata: "role=master"
   flannel:
-    interface: __FLANNEL_IF__
+    interface: $public_ipv4
   units:
     - name: rpcbind.service
       enable: true
