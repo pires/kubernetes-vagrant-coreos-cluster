@@ -22,6 +22,10 @@ brew update
 brew install wget
 ```
 
+### Windows
+
+The [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) will be installed in order to enable NFS shares.
+
 ## Deploy Kubernetes
 
 Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_ and, by default, a couple VMs with everything needed to become Kubernetes minions.
@@ -31,7 +35,7 @@ You can change the number of minions and/or the Kubernetes version by setting en
 vagrant up
 ```
 
-### *nix host
+### Linux or MacOS host
 
 Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal windo, run:
 
@@ -43,7 +47,7 @@ New terminal windows will have this set for you.
 
 ### Windows host
 
-On windows kubectl is installed on the master node in the ```/opt/bin``` directory. To manage your kubernetes cluster, ssh into the master node and run kubectl from there.
+On Windows systems, `kubectl` is installed on the `master` node, in the ```/opt/bin``` directory. To manage your Kubernetes cluster, `ssh` into the `master` node and run `kubectl` from there.
 
 ```
 vagrant ssh master
@@ -168,9 +172,6 @@ you which to mount the allowed syntax is...
 # if the mount is enabled or disabled by default. default is `true`.
   disabled: false
 ```
-
-#### Windows
-For windows the [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) is installed to enable nfs shares.
 
 ## TL;DR
 
