@@ -13,15 +13,13 @@ scream () {
 case "$PLATFORM" in
   darwin|linux)
     targetDir="/usr/local/bin"
-    homeDir="~"
     if [[ -r /etc/os-release ]]; then
       . /etc/os-release
       if [[ $ID = coreos ]]; then
         targetDir="/opt/bin"
-        homeDir="/home/core"
-        unlink ${homeDir}/.bash_profile
-        cp /usr/share/skel/.bash_profile ${homeDir}/.bash_profile
-        chmod 775 ${homeDir}/.bash_profile
+        unlink $HOME/.bash_profile
+        cp /usr/share/skel/.bash_profile $HOME/.bash_profile
+        chmod 775 $HOME/.bash_profile
       fi
     fi
     ;;
@@ -38,11 +36,11 @@ if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
 
   # TODO use sed to replace current values, if any
   echo "Setting environment variables.."
-  if ! grep -q 'export FLEETCTL_ENDPOINT=http://172.17.8.101:4001' ${homeDir}/.bash_profile ; then
-    echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001" >> ${homeDir}/.bash_profile
+  if ! grep -q 'export FLEETCTL_ENDPOINT=http://172.17.8.101:4001' $HOME/.bash_profile ; then
+    echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001" >> $HOME/.bash_profile
   fi
-  if ! grep -q 'export KUBERNETES_MASTER=http://172.17.8.101:8080' ${homeDir}/.bash_profile ; then
-    echo "export KUBERNETES_MASTER=http://172.17.8.101:8080" >> ${homeDir}/.bash_profile
+  if ! grep -q 'export KUBERNETES_MASTER=http://172.17.8.101:8080' $HOME/.bash_profile ; then
+    echo "export KUBERNETES_MASTER=http://172.17.8.101:8080" >> $HOME/.bash_profile
   fi
   export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
   export KUBERNETES_MASTER=http://172.17.8.101:8080
