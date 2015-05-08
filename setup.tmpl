@@ -17,6 +17,7 @@ case "$PLATFORM" in
       . /etc/os-release
       if [[ $ID = coreos ]]; then
         targetDir="/opt/bin"
+        HOME="/home/core"
         unlink $HOME/.bash_profile
         cp /usr/share/skel/.bash_profile $HOME/.bash_profile
         chmod 775 $HOME/.bash_profile
