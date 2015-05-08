@@ -198,7 +198,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.trigger.after [:up] do
           info "Installing kubectl for the kubernetes version we just bootstrapped..."
           if OS.windows?
-            run_remote "/bin/sh /home/core/kubectlsetup install"
+            run_remote "sudo -u core /bin/sh /home/core/kubectlsetup install"
           else
             system "./temp/setup install"
           end
