@@ -68,7 +68,7 @@ coreos:
             [Unit]
             # making sure that flanneld finished startup, otherwise containers
             # won't land in flannel's network...
-            Require=flanneld.service
+            Requires=flanneld.service
             After=flanneld.service
             [Service]
             Environment=DOCKER_OPTS='--registry-mirror=http://__MASTER_IP__:5000'
