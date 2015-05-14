@@ -263,6 +263,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
       end
 
+      kHost.trigger.before [:halt, :reload] do
+        run_remote "sudo rm -f /var/lib/coreos-vagrant/vagrantfile-user-data"
+      end
+
       kHost.trigger.before [:destroy] do
         system <<-EOT.prepend("\n\n") + "\n"
           rm -f temp/*
