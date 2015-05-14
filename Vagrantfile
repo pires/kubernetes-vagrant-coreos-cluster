@@ -32,6 +32,7 @@ module OS
 end
 
 required_plugins = %w(vagrant-triggers)
+required_plugins.push('vagrant-proxyconf')
 if OS.windows?
   required_plugins.push('vagrant-winnfsd')
 end
@@ -93,6 +94,10 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 
+HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy'] || ''
+HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy'] || ''
+NO_PROXY = "#{BASE_IP_ADDR}.100/255," + (ENV['NO_PROXY'] || ENV['no_proxy'] || 'localhost')
+
 CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
 validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
   'libvirt-coreos', 'juju' ]
@@ -148,6 +153,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vbguest.auto_update = false
   end
 
+  # setup VM proxy to system proxy and skip proxy for #{BASE_IP_ADDR}.100/255
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http = HTTP_PROXY
+    config.proxy.https = HTTPS_PROXY
+    config.proxy.no_proxy = NO_PROXY
+  end
+
   (1..(NUM_INSTANCES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
@@ -175,7 +187,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i#{sedInplaceArg} ./temp/setup"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/setup"
           system "chmod +x temp/setup"
-          
+
           info "Configuring Kubernetes cluster DNS..."
           system "cp dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
@@ -194,7 +206,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "ssh-add ~/.vagrant.d/insecure_private_key"
           system "rm -rf ~/.fleetctl/known_hosts"
         end
-        
+
         kHost.trigger.after [:up] do
           info "Installing kubectl for the kubernetes version we just bootstrapped..."
           if OS.windows?
@@ -368,6 +380,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
