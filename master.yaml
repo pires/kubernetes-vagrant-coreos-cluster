@@ -16,12 +16,12 @@ write-files:
           sleep 1 && echo .;
         done;
       exit $?
-  - path: /etc/systemd/system/docker.service.d/http-proxy.conf
-      owner: core:core
-      permissions: '0644'
-      content: |
-        [Service]
-        Environment="HTTP_PROXY=__HTTP_PROXY__" "HTTPS_PROXY=__HTTPS_PROXY__" "NO_PROXY=__NO_PROXY__"
+  - __PROXY_LINE__path: /etc/systemd/system/docker.service.d/http-proxy.conf
+    __PROXY_LINE__owner: core:core
+    __PROXY_LINE__permissions: '0644'
+    __PROXY_LINE__content: |
+      __PROXY_LINE__[Service]
+      __PROXY_LINE__Environment="HTTP_PROXY=__HTTP_PROXY__" "HTTPS_PROXY=__HTTPS_PROXY__" "NO_PROXY=__NO_PROXY__"
 
 coreos:
   etcd2:

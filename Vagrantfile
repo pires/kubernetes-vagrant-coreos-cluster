@@ -32,7 +32,13 @@ module OS
 end
 
 required_plugins = %w(vagrant-triggers)
-required_plugins.push('vagrant-proxyconf')
+
+# check either 'http_proxy' or 'HTTP_PROXY' environment variable
+enable_proxy = !(ENV['HTTP_PROXY'] || ENV['http_proxy'] || '').empty?
+if enable_proxy
+  required_plugins.push('vagrant-proxyconf')
+end
+
 if OS.windows?
   required_plugins.push('vagrant-winnfsd')
 end
@@ -94,9 +100,12 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 
-HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy'] || ''
-HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy'] || ''
-NO_PROXY = "#{BASE_IP_ADDR}.100/255," + (ENV['NO_PROXY'] || ENV['no_proxy'] || 'localhost')
+if enable_proxy
+  HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy']
+  HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy']
+  # skip proxy also for #{BASE_IP_ADDR}.100/255
+  NO_PROXY = "#{BASE_IP_ADDR}.100/255," + (ENV['NO_PROXY'] || ENV['no_proxy'] || "localhost")
+end
 
 CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
 validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
@@ -153,11 +162,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vbguest.auto_update = false
   end
 
-  # setup VM proxy to system proxy and skip proxy for #{BASE_IP_ADDR}.100/255
-  if Vagrant.has_plugin?("vagrant-proxyconf")
+  # setup VM proxy to system proxy environment
+  if Vagrant.has_plugin?("vagrant-proxyconf") && enable_proxy
     config.proxy.http = HTTP_PROXY
     config.proxy.https = HTTPS_PROXY
     config.proxy.no_proxy = NO_PROXY
+    # proxyconf plugin use wrong approach to set Docker proxy for CoreOS
+    # force proxyconf to skip Docker proxy setup
+    config.proxy.enabled = { docker: false }
   end
 
   (1..(NUM_INSTANCES.to_i + 1)).each do |i|
@@ -369,8 +381,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       if File.exist?(cfg)
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
+        if enable_proxy
+          kHost.vm.provision :shell, :privileged => true,
+          inline: <<-EOF
+          sed -i "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
+          sed -i "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
+          EOF
+        end
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
+          sed -i "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
           sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
@@ -380,9 +402,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
           sed -i "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
