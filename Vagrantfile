@@ -103,8 +103,7 @@ GUI = (ENV['GUI'].to_s.downcase == 'true')
 if enable_proxy
   HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy']
   HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy']
-  # skip proxy also for #{BASE_IP_ADDR}.100/255
-  NO_PROXY = "#{BASE_IP_ADDR}.100/255," + (ENV['NO_PROXY'] || ENV['no_proxy'] || "localhost")
+  NO_PROXY = ENV['NO_PROXY'] || ENV['no_proxy'] || "localhost"
 end
 
 CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
@@ -166,6 +165,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   if Vagrant.has_plugin?("vagrant-proxyconf") && enable_proxy
     config.proxy.http = HTTP_PROXY
     config.proxy.https = HTTPS_PROXY
+    # most http tools, like wget and curl do not undestand IP range
+    # thus adding each node one by one to no_proxy
+    (1..(NUM_INSTANCES.to_i + 1)).each do |i|
+      Object.redefine_const(:NO_PROXY, "#{NO_PROXY},#{BASE_IP_ADDR}.#{i+100}")
+    end
     config.proxy.no_proxy = NO_PROXY
     # proxyconf plugin use wrong approach to set Docker proxy for CoreOS
     # force proxyconf to skip Docker proxy setup
@@ -198,6 +202,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "cp setup.tmpl temp/setup"
           system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i#{sedInplaceArg} ./temp/setup"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/setup"
+          if enable_proxy
+            system "sed -e 's|__PROXY_LINE__||g' -i#{sedInplaceArg} ./temp/setup"
+            system "sed -e 's|__NO_PROXY__|#{NO_PROXY}|g' -i#{sedInplaceArg} ./temp/setup"
+          else
+            system "sed -e '/__PROXY_LINE__/d' -i#{sedInplaceArg} ./temp/setup"
+          end
           system "chmod +x temp/setup"
 
           info "Configuring Kubernetes cluster DNS..."

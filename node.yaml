@@ -35,6 +35,24 @@ coreos:
   flannel:
     interface: $public_ipv4
   units:
+    - __PROXY_LINE__name: set-http-proxy.service
+      __PROXY_LINE__command: start
+      __PROXY_LINE__content: |
+        __PROXY_LINE__[Unit]
+        __PROXY_LINE__Description=Set HTTP proxy
+        __PROXY_LINE__DefaultDependencies=no
+        __PROXY_LINE__After=systemd-sysctl.service
+        __PROXY_LINE__Before=sysinit.target
+        __PROXY_LINE__[Service]
+        __PROXY_LINE__Type=oneshot
+        __PROXY_LINE__ExecStartPre=/usr/bin/systemctl set-environment HTTP_PROXY=__HTTP_PROXY__
+        __PROXY_LINE__ExecStartPre=/usr/bin/systemctl set-environment HTTPS_PROXY=__HTTP_PROXY__
+        __PROXY_LINE__ExecStartPre=/usr/bin/systemctl set-environment NO_PROXY=__NO_PROXY__
+        __PROXY_LINE__ExecStartPre=/usr/bin/systemctl set-environment http_proxy=__HTTP_PROXY__
+        __PROXY_LINE__ExecStartPre=/usr/bin/systemctl set-environment https_proxy=__HTTP_PROXY__
+        __PROXY_LINE__ExecStart=/usr/bin/systemctl set-environment no_proxy=__NO_PROXY__
+        __PROXY_LINE__[Install]
+        __PROXY_LINE__WantedBy=multi-user.target
     - name: rpcbind.service
       enable: true
       command: start

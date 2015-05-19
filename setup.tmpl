@@ -31,19 +31,33 @@ esac
 if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
   echo "Downloading and installing ${PLATFORM} version of 'kubectl' v${KUBERNETES_VERSION} into ${targetDir}. This may take a couple minutes, depending on your internet speed.."
   [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
-  sudo wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
+  sudo -E wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
   [ -x ${targetDir}/kubectl ] || sudo chmod +x ${targetDir}/kubectl
 
-  # TODO use sed to replace current values, if any
+  # use sed to replace current values, if any; create profile file if not exists
+  touch -a $HOME/.bash_profile
   echo "Setting environment variables.."
-  if ! grep -q 'export FLEETCTL_ENDPOINT=http://172.17.8.101:4001' $HOME/.bash_profile ; then
-    echo "export FLEETCTL_ENDPOINT=http://172.17.8.101:4001" >> $HOME/.bash_profile
+  if ! grep -q 'export FLEETCTL_ENDPOINT' $HOME/.bash_profile ; then
+    echo "export FLEETCTL_ENDPOINT=http://__MASTER_IP__:4001" >> $HOME/.bash_profile
+  else
+    sed -i'*' 's|.*export FLEETCTL_ENDPOINT.*|export FLEETCTL_ENDPOINT=http://__MASTER_IP__:4001|' $HOME/.bash_profile
   fi
-  if ! grep -q 'export KUBERNETES_MASTER=http://172.17.8.101:8080' $HOME/.bash_profile ; then
-    echo "export KUBERNETES_MASTER=http://172.17.8.101:8080" >> $HOME/.bash_profile
+  if ! grep -q 'export KUBERNETES_MASTER=http://__MASTER_IP__:8080' $HOME/.bash_profile ; then
+    echo "export KUBERNETES_MASTER=http://__MASTER_IP__:8080" >> $HOME/.bash_profile
+  else
+    sed -i'*' 's|.*export KUBERNETES_MASTER.*|export KUBERNETES_MASTER=http://__MASTER_IP__:8080|' $HOME/.bash_profile
   fi
-  export FLEETCTL_ENDPOINT=http://172.17.8.101:4001
-  export KUBERNETES_MASTER=http://172.17.8.101:8080
+  __PROXY_LINE__if ! grep -q 'export NO_PROXY' $HOME/.bash_profile ; then
+  __PROXY_LINE__  echo "export NO_PROXY=__NO_PROXY__" >> $HOME/.bash_profile
+  __PROXY_LINE__  echo "export no_proxy=__NO_PROXY__" >> $HOME/.bash_profile
+  __PROXY_LINE__else
+  __PROXY_LINE__  sed -i'*' 's|.*export NO_PROXY.*|export NO_PROXY=__NO_PROXY__|' $HOME/.bash_profile
+  __PROXY_LINE__  sed -i'*' 's|.*export no_proxy.*|export no_proxy=__NO_PROXY__|' $HOME/.bash_profile
+  __PROXY_LINE__fi
+  export FLEETCTL_ENDPOINT=http://__MASTER_IP__:4001
+  export KUBERNETES_MASTER=http://__MASTER_IP__:8080
+  __PROXY_LINE__export NO_PROXY=__NO_PROXY__
+  __PROXY_LINE__export no_proxy=__NO_PROXY__
 elif [[ "$#" -eq 1 && "$1" == "uninstall"  ]] ; then
   echo "Removing 'kubectl' v${KUBERNETES_VERSION}.."
   [ -f ${targetDir}/kubectl ] && sudo rm -f ${targetDir}/kubectl
