@@ -52,12 +52,6 @@ spec:
         - containerPort: 53
           name: dns-tcp
           protocol: TCP
-        livenessProbe:
-          exec:
-            command:
-            - nslookup kubernetes.default.__DNS_DOMAIN__ localhost >/dev/null; echo ok
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
       dnsPolicy: Default  # Don't use cluster DNS.
 #      volumes:
 #      - name: dns-token
