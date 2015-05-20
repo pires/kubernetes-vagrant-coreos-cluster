@@ -32,6 +32,13 @@ module OS
 end
 
 required_plugins = %w(vagrant-triggers)
+
+# check either 'http_proxy' or 'HTTP_PROXY' environment variable
+enable_proxy = !(ENV['HTTP_PROXY'] || ENV['http_proxy'] || '').empty?
+if enable_proxy
+  required_plugins.push('vagrant-proxyconf')
+end
+
 if OS.windows?
   required_plugins.push('vagrant-winnfsd')
 end
@@ -93,6 +100,12 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 
+if enable_proxy
+  HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy']
+  HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy']
+  NO_PROXY = ENV['NO_PROXY'] || ENV['no_proxy'] || "localhost"
+end
+
 CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
 validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
   'libvirt-coreos', 'juju' ]
@@ -148,6 +161,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vbguest.auto_update = false
   end
 
+  # setup VM proxy to system proxy environment
+  if Vagrant.has_plugin?("vagrant-proxyconf") && enable_proxy
+    config.proxy.http = HTTP_PROXY
+    config.proxy.https = HTTPS_PROXY
+    # most http tools, like wget and curl do not undestand IP range
+    # thus adding each node one by one to no_proxy
+    (1..(NUM_INSTANCES.to_i + 1)).each do |i|
+      Object.redefine_const(:NO_PROXY, "#{NO_PROXY},#{BASE_IP_ADDR}.#{i+100}")
+    end
+    config.proxy.no_proxy = NO_PROXY
+    # proxyconf plugin use wrong approach to set Docker proxy for CoreOS
+    # force proxyconf to skip Docker proxy setup
+    config.proxy.enabled = { docker: false }
+  end
+
   (1..(NUM_INSTANCES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
@@ -174,8 +202,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "cp setup.tmpl temp/setup"
           system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i#{sedInplaceArg} ./temp/setup"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/setup"
+          if enable_proxy
+            system "sed -e 's|__PROXY_LINE__||g' -i#{sedInplaceArg} ./temp/setup"
+            system "sed -e 's|__NO_PROXY__|#{NO_PROXY}|g' -i#{sedInplaceArg} ./temp/setup"
+          else
+            system "sed -e '/__PROXY_LINE__/d' -i#{sedInplaceArg} ./temp/setup"
+          end
           system "chmod +x temp/setup"
-          
+
           info "Configuring Kubernetes cluster DNS..."
           system "cp dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
@@ -194,7 +228,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "ssh-add ~/.vagrant.d/insecure_private_key"
           system "rm -rf ~/.fleetctl/known_hosts"
         end
-        
+
         kHost.trigger.after [:up] do
           info "Installing kubectl for the kubernetes version we just bootstrapped..."
           if OS.windows?
@@ -357,8 +391,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       if File.exist?(cfg)
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
+        if enable_proxy
+          kHost.vm.provision :shell, :privileged => true,
+          inline: <<-EOF
+          sed -i "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
+          sed -i "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
+          EOF
+        end
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
+          sed -i "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
           sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
