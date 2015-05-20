@@ -384,7 +384,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
          :source => "#{DOCKERCFG}", :destination => "/home/core/.dockercfg"
 
         kHost.vm.provision :shell, run: "always" do |s|
-          s.inline = "cp /home/core/.dockercfg /.dockercfg"
+          s.inline = "cp /home/core/.dockercfg /root/.dockercfg"
           s.privileged = true
         end
       end
