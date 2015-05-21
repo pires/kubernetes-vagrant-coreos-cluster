@@ -106,6 +106,9 @@ if enable_proxy
   NO_PROXY = ENV['NO_PROXY'] || ENV['no_proxy'] || "localhost"
 end
 
+REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT'].to_s.downcase == 'true')
+# if this is set true, remember to use --provision when executing vagrant up / reload
+
 CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
 validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
   'libvirt-coreos', 'juju' ]
@@ -298,7 +301,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       kHost.trigger.before [:halt, :reload] do
-        run_remote "sudo rm -f /var/lib/coreos-vagrant/vagrantfile-user-data"
+        if REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT
+          run_remote "sudo rm -f /var/lib/coreos-vagrant/vagrantfile-user-data"
+        end
       end
 
       kHost.trigger.before [:destroy] do
