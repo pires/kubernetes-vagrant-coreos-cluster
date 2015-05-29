@@ -27,6 +27,7 @@ coreos:
   etcd2:
     name: __NAME__
     listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
+    advertise-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
     initial-cluster: __ETCD_SEED_CLUSTER__
     proxy: on
   fleet:
