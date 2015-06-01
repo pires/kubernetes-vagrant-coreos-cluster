@@ -142,6 +142,7 @@ coreos:
           --healthz_port=10248
         Restart=always
         RestartSec=10
+        WorkingDirectory=/root/
   update:
     group: __CHANNEL__
     reboot-strategy: off
