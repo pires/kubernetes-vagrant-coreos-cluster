@@ -62,7 +62,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.17.0'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.18.0'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
@@ -109,11 +109,11 @@ end
 REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT'].to_s.downcase == 'true')
 # if this is set true, remember to use --provision when executing vagrant up / reload
 
-CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase || 'vagrant'
+CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase
 validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
   'libvirt-coreos', 'juju' ]
 Object.redefine_const(:CLOUD_PROVIDER,
-  'vagrant') unless validCloudProviders.include?(CLOUD_PROVIDER)
+  '') unless validCloudProviders.include?(CLOUD_PROVIDER)
 
 (1..(NUM_INSTANCES.to_i + 1)).each do |i|
   case i
