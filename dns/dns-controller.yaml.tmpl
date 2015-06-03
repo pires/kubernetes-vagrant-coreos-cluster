@@ -28,7 +28,7 @@ spec:
         - -initial-cluster-token
         - skydns-etcd
       - name: kube2sky
-        image: gcr.io/google_containers/kube2sky:1.5
+        image: gcr.io/google_containers/kube2sky:1.7
         args:
         # command = "/kube2sky"
         - -kube_master_url=http://__MASTER_IP__:8080 
@@ -42,9 +42,10 @@ spec:
         image: gcr.io/google_containers/skydns:2015-03-11-001
         args:
         # command = "/skydns"
-        - -machines=http://localhost:4001
+        - -machines=http://localhost:2379
         - -addr=0.0.0.0:53
         - -domain=__DNS_DOMAIN__
+        - -nameservers=__DNS_UPSTREAM_SERVERS__
         ports:
         - containerPort: 53
           name: dns
@@ -52,6 +53,14 @@ spec:
         - containerPort: 53
           name: dns-tcp
           protocol: TCP
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - nslookup kubernetes.default.__DNS_DOMAIN__ localhost >/dev/null
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
       dnsPolicy: Default  # Don't use cluster DNS.
 #      volumes:
 #      - name: dns-token
