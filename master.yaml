@@ -141,12 +141,15 @@ coreos:
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-apiserver
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
         ExecStart=/opt/bin/kube-apiserver \
+          --service_account_key_file=/tmp/kube-serviceaccount.key \
+          --service_account_lookup=false \
+          --admission_control=NamespaceLifecycle,NamespaceAutoProvision,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
           --allow_privileged=true \
           --insecure_bind_address=0.0.0.0 \
           --insecure_port=8080 \
           --kubelet_https=true \
           --secure_port=6443 \
-          --portal_net=10.100.0.0/16 \
+          --service-cluster-ip-range=10.100.0.0/16 \
           --etcd_servers=http://$private_ipv4:2379 \
           --public_address_override=$public_ipv4 \
           --cloud_provider=__CLOUDPROVIDER__ \
@@ -167,6 +170,7 @@ coreos:
         ExecStartPre=/usr/bin/chmod +x /opt/bin/kube-controller-manager
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
         ExecStart=/opt/bin/kube-controller-manager \
+          --service_account_private_key_file=/tmp/kube-serviceaccount.key \
           --master=$private_ipv4:8080 \
           --cloud_provider=__CLOUDPROVIDER__ \
           --pod_eviction_timeout=30s \

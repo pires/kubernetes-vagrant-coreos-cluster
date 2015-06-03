@@ -173,6 +173,14 @@ you which to mount the allowed syntax is...
   disabled: false
 ```
 
+### Kubernetes Service-Account key file
+
+`kube-serviceaccount.key` file has been generated for the sake of simplicity of deployment. If you want to generate your own, run:
+
+```
+openssl genrsa -out kube-serviceaccount.key 2048 2>/dev/null
+```
+
 ## TL;DR
 
 ```

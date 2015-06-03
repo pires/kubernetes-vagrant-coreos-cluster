@@ -58,6 +58,7 @@ Vagrant.require_version ">= 1.6.0"
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
+SSL_FILE = File.join(File.dirname(__FILE__), "kube-serviceaccount.key")
 
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
@@ -392,6 +393,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           s.inline = "cp /home/core/.dockercfg /root/.dockercfg"
           s.privileged = true
         end
+      end
+
+      if File.exist?(SSL_FILE)
+        kHost.vm.provision :file, :source => "#{SSL_FILE}", :destination => "/tmp/kube-serviceaccount.key"
       end
 
       if File.exist?(cfg)
