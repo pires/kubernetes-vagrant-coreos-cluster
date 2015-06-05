@@ -196,6 +196,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.define vmName = hostname do |kHost|
       kHost.vm.hostname = vmName
+
+      # suspend / resume is hard to be properly supported because we have no way
+      # to assure the fully deterministic behavior of whatever is inside the VMs
+      # when faced with XXL clock gaps... so we just disable this functionality.
+      kHost.trigger.reject [:suspend, :resume] do
+        info "'vagrant suspend' and 'vagrant resume' are disabled."
+        info "- please do use 'vagrant halt' and 'vagrant up' instead."
+      end
+      # simpler / more reliable
+      kHost.trigger.reject :reload do
+        info "'vagrant reload' is disabled."
+        info "- please do use 'vagrant halt' and 'vagrant up' instead."
+      end
+
       # vagrant-triggers has no concept of global triggers so to avoid having
       # then to run as many times as the total number of VMs we only call them
       # in the master (re: emyl/vagrant-triggers#13)...
