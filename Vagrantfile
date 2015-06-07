@@ -171,8 +171,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.proxy.https = HTTPS_PROXY
     # most http tools, like wget and curl do not undestand IP range
     # thus adding each node one by one to no_proxy
+    no_proxies = NO_PROXY.split(",")
     (1..(NUM_INSTANCES.to_i + 1)).each do |i|
-      Object.redefine_const(:NO_PROXY, "#{NO_PROXY},#{BASE_IP_ADDR}.#{i+100}")
+      vm_ip_addr = "#{BASE_IP_ADDR}.#{i+100}"
+      Object.redefine_const(:NO_PROXY,
+        "#{NO_PROXY},#{vm_ip_addr}") unless no_proxies.include?(vm_ip_addr)
     end
     config.proxy.no_proxy = NO_PROXY
     # proxyconf plugin use wrong approach to set Docker proxy for CoreOS
@@ -418,24 +421,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         if enable_proxy
           kHost.vm.provision :shell, :privileged => true,
           inline: <<-EOF
-          sed -i'*' "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
           EOF
         end
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
-          sed -i'*' "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
-          sed -i'*' "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
-          sed -i'*' "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
-          sed -i'*' "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
-          sed -i'*' "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
-          sed -i'*' "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
+          sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
+          sed -i"*" "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
+          sed -i"*" "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
+          sed -i"*" "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
