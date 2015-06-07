@@ -418,24 +418,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         if enable_proxy
           kHost.vm.provision :shell, :privileged => true,
           inline: <<-EOF
-          sed -i "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
-          sed -i "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__NO_PROXY__|#{NO_PROXY}|g" /tmp/vagrantfile-user-data
           EOF
         end
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
-          sed -i "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
-          sed -i "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
-          sed -i "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
-          sed -i "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
-          sed -i "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
-          sed -i "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
-          sed -i "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
+          sed -i'*' "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
+          sed -i'*' "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
+          sed -i'*' "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
+          sed -i'*' "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
+          sed -i'*' "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
