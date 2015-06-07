@@ -413,7 +413,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       if File.exist?(SSL_FILE)
-        kHost.vm.provision :file, :source => "#{SSL_FILE}", :destination => "/tmp/kube-serviceaccount.key"
+        kHost.vm.provision :file, :source => "#{SSL_FILE}", :destination => "/home/core/kube-serviceaccount.key"
       end
 
       if File.exist?(cfg)
