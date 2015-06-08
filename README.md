@@ -131,7 +131,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `0.18.0`.
+   Defaults to `0.18.1`.
    Versions prior to `0.18.0` **won't work** with current cloud-config files.
 
  - **CLOUD_PROVIDER** defines the specific cloud provider being used. This is useful, for instance, if you're relying on kubernetes to set load-balancers for your services.

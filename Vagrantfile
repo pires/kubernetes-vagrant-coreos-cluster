@@ -63,7 +63,7 @@ SSL_FILE = File.join(File.dirname(__FILE__), "kube-serviceaccount.key")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.18.0'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.18.1'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 if CHANNEL != 'alpha'
@@ -207,7 +207,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         info "'vagrant suspend' and 'vagrant resume' are disabled."
         info "- please do use 'vagrant halt' and 'vagrant up' instead."
       end
-
+      
       config.trigger.instead_of :reload do
         exec "vagrant halt && vagrant up"
         exit
