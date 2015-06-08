@@ -207,10 +207,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         info "'vagrant suspend' and 'vagrant resume' are disabled."
         info "- please do use 'vagrant halt' and 'vagrant up' instead."
       end
-      # simpler / more reliable
-      kHost.trigger.reject :reload do
-        info "'vagrant reload' is disabled."
-        info "- please do use 'vagrant halt' and 'vagrant up' instead."
+
+      config.trigger.instead_of :reload do
+        exec "vagrant halt && vagrant up"
+        exit
       end
 
       # vagrant-triggers has no concept of global triggers so to avoid having
