@@ -154,7 +154,7 @@ coreos:
           --public_address_override=$public_ipv4 \
           --cloud_provider=__CLOUDPROVIDER__ \
           --logtostderr=true \
-          --runtime_config=api/v1beta3
+          --runtime_config=api/v1
         Restart=always
         RestartSec=10
     - name: kube-controller-manager.service
