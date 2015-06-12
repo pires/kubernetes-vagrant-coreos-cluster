@@ -97,7 +97,7 @@ Most aspects of your cluster setup can be customized with environment variables.
  - **NUM_INSTANCES** sets the number of nodes (minions).
 
    Defaults to **2**.
- - **UPDATE_CHANNEL** sets the default CoreOS channel to be used in the VMs.
+ - **CHANNEL** sets the default CoreOS channel to be used in the VMs.
 
    Defaults to **alpha**.
 
