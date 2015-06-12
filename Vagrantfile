@@ -279,7 +279,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             if OS.windows?
               run_remote "/opt/bin/kubectl create -f /home/core/dns-controller.yaml"
             else
-              system "kubectl create -f temp/dns-controller.yaml"
+              system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f temp/dns-controller.yaml"
             end
           end
 
@@ -292,7 +292,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             if OS.windows?
               run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
             else
-              system "kubectl create -f dns/dns-service.yaml"
+              system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f dns/dns-service.yaml"
             end
           end
 
