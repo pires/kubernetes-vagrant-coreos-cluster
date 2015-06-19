@@ -65,7 +65,7 @@ DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.19.0'
 
-CHANNEL = ENV['CHANNEL'] || 'beta'
+CHANNEL = ENV['CHANNEL'] || 'alpha'
 #if CHANNEL != 'alpha'
 #  puts "============================================================================="
 #  puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
