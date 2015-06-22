@@ -63,7 +63,7 @@ SSL_FILE = File.join(File.dirname(__FILE__), "kube-serviceaccount.key")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.19.0'
+KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.19.1'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
 #if CHANNEL != 'alpha'
