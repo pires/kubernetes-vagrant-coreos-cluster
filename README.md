@@ -129,6 +129,8 @@ Most aspects of your cluster setup can be customized with environment variables.
    by running `docker login <registry>.<domain>`. All nodes will get it automatically,
    at 'vagrant up', given any modification or update to that file.
 
+ - **DOCKER_OPTIONS** sets the additional `DOCKER_OPTS` for docker service on both master and the nodes. Useful for adding params such as `--insecure-registry`.
+
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
    Defaults to `0.19.3`.
