@@ -63,6 +63,8 @@ SSL_FILE = File.join(File.dirname(__FILE__), "kube-serviceaccount.key")
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
 
+DOCKER_OPTIONS = ENV['DOCKER_OPTIONS'] || ''
+
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '0.19.3'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
@@ -430,6 +432,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provision :shell, :privileged => true,
         inline: <<-EOF
           sed -i"*" "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
+          sed -i"*" "s,__DOCKER_OPTIONS__,#{DOCKER_OPTIONS},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data

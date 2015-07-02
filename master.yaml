@@ -126,7 +126,7 @@ coreos:
             Requires=docker-cache.service flanneld.service
             After=docker-cache.service flanneld.service
             [Service]
-            Environment=DOCKER_OPTS='--registry-mirror=http://$private_ipv4:5000'
+            Environment=DOCKER_OPTS='__DOCKER_OPTIONS__ --registry-mirror=http://$private_ipv4:5000'
     - name: kube-apiserver.service
       command: start
       content: |
