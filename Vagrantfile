@@ -272,7 +272,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             break if res.is_a? Net::HTTPSuccess or j >= 50
           end
 
-          res, uri.path = nil, '/api/v1beta1/replicationControllers/kube-dns'
+          res, uri.path = nil, '/api/v1/namespaces/default/replicationControllers/kube-dns'
           begin
             res = Net::HTTP.get_response(uri)
           rescue
@@ -285,7 +285,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
           end
 
-          res, uri.path = nil, '/api/v1beta1/services/kube-dns'
+          res, uri.path = nil, '/api/v1/namespaces/default/services/kube-dns'
           begin
             res = Net::HTTP.get_response(uri)
           rescue
