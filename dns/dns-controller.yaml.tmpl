@@ -19,6 +19,10 @@ spec:
       containers:
       - name: etcd
         image: gcr.io/google_containers/etcd:2.0.9
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
         command:
         - /usr/local/bin/etcd
         - -listen-client-urls
@@ -28,18 +32,21 @@ spec:
         - -initial-cluster-token
         - skydns-etcd
       - name: kube2sky
-        image: gcr.io/google_containers/kube2sky:1.7
+        image: gcr.io/google_containers/kube2sky:1.11
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
         args:
         # command = "/kube2sky"
         - -kube_master_url=http://__MASTER_IP__:8080 
         - -domain=__DNS_DOMAIN__
-#        - -kubecfg_file=/etc/dns_token/kubeconfig
-#        volumeMounts:
-#        - mountPath: /etc/dns_token
-#          name: dns-token
-#          readOnly: true
       - name: skydns
         image: gcr.io/google_containers/skydns:2015-03-11-001
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
         args:
         # command = "/skydns"
         - -machines=http://localhost:2379
@@ -58,11 +65,7 @@ spec:
             command:
             - /bin/sh
             - -c
-            - nslookup kubernetes.default.__DNS_DOMAIN__ localhost >/dev/null
+            - nslookup kubernetes.default.svc.__DNS_DOMAIN__ localhost >/dev/null
           initialDelaySeconds: 30
           timeoutSeconds: 5
       dnsPolicy: Default  # Don't use cluster DNS.
-#      volumes:
-#      - name: dns-token
-#        secret:
-#          secretName: token-system-dns
