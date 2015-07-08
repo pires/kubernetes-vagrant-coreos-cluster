@@ -209,7 +209,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         info "'vagrant suspend' and 'vagrant resume' are disabled."
         info "- please do use 'vagrant halt' and 'vagrant up' instead."
       end
-      
+
       config.trigger.instead_of :reload do
         exec "vagrant halt && vagrant up"
         exit
@@ -440,8 +440,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
-          sed -i"*" "s|__NODE_CPUS__|#{NODE_CPUS}|g" /tmp/vagrantfile-user-data
-          sed -i"*" "s|__NODE_MEM__|#{NODE_MEM}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end

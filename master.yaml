@@ -174,8 +174,6 @@ coreos:
           --master=$private_ipv4:8080 \
           --cloud_provider=__CLOUDPROVIDER__ \
           --pod_eviction_timeout=30s \
-          --node_milli_cpu=__NODE_CPUS__000 \
-          --node_memory=__NODE_MEM__Mi \
           --logtostderr=true
         Restart=always
         RestartSec=10
