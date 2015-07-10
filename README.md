@@ -111,13 +111,13 @@ Most aspects of your cluster setup can be customized with environment variables.
    Defaults to **false**. Only use this if you *really* know what you are doing.
  - **MASTER_MEM** sets the master's VM memory.
 
-   Defaults to **512** (in MB)
+   Defaults to **1024** (in MB)
  - **MASTER_CPUS** sets the number os vCPUs to be used by the master's VM.
 
    Defaults to **1**.
  - **NODE_MEM** sets the worker nodes' (aka minions in Kubernetes lingo) VM memory.
 
-   Defaults to **1024** (in MB)
+   Defaults to **2048** (in MB)
  - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs.
 
    Defaults to **1**.
@@ -141,10 +141,10 @@ Most aspects of your cluster setup can be customized with environment variables.
    [Possible values are `gce`, `gke`, `aws`, `azure`, `vagrant`, `vsphere`, `libvirt-coreos` and `juju`](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/cluster/kube-env.sh#L17). ~~Defaults to `vagrant`,~~ because of https://github.com/GoogleCloudPlatform/kubernetes/issues/9049.
 
 
-So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 2GB of RAM and 2 vCPUs per node one just would do...
+So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would do...
 
 ```
-NODE_MEM=2048 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
+NODE_MEM=4096 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
 ```
 
 **Please do note** that if you were using non default settings to startup your
