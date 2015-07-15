@@ -366,6 +366,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           vb.gui = GUI
         end
       end
+      ["vmware_fusion", "vmware_workstation"].each do |h|
+        kHost.vm.provider h do |v|
+          v.vmx["memsize"] = memory
+          v.vmx["numvcpus"] = cpus
+        end
+      end
       ["parallels", "virtualbox"].each do |h|
         kHost.vm.provider h do |n|
           n.memory = memory
