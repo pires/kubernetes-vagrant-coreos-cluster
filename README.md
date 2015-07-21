@@ -207,6 +207,18 @@ For a more elaborate scenario [here]
 you need to get a scalable Elasticsearch cluster on top of Kubernetes in no
 time.
 
+## Troubleshooting
+
+#### I'm getting errors while waiting for Kubernetes master to become ready on a MacOS host!
+
+If you see something like this in the log:
+```
+==> master: Waiting for Kubernetes master to become ready...
+error: unable to load file "temp/dns-controller.yaml": unable to connect to a server to handle "replicationcontrollers": couldn't read version from server: Get https://10.245.1.2/api: dial tcp 10.245.1.2:443: i/o timeout
+error: no objects passed to create
+```
+You probably have a pre-existing Kubernetes config file on your system at `~/.kube/config`. Delete or move that file and try again.
+
 ## Licensing
 
 This work is [open source](http://opensource.org/osd), and is licensed under the [Apache License, Version 2.0](http://opensource.org/licenses/Apache-2.0).
