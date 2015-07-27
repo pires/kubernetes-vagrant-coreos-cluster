@@ -118,16 +118,6 @@ validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
 Object.redefine_const(:CLOUD_PROVIDER,
   '') unless validCloudProviders.include?(CLOUD_PROVIDER)
 
-(1..(NUM_INSTANCES.to_i + 1)).each do |i|
-  case i
-  when 1
-    hostname = "master"
-    ETCD_SEED_CLUSTER = "#{hostname}=http://#{BASE_IP_ADDR}.#{i+100}:2380"
-  else
-    hostname = ",node-%02d" % (i - 1)
-  end
-end
-
 # Read YAML file with mountpoint details
 MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
 
@@ -188,6 +178,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   (1..(NUM_INSTANCES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
+      ETCD_SEED_CLUSTER = "#{hostname}=http://#{BASE_IP_ADDR}.#{i+100}:2380"
       cfg = MASTER_YAML
       memory = MASTER_MEM
       cpus = MASTER_CPUS
