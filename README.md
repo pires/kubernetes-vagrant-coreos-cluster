@@ -29,7 +29,7 @@ The [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) will be
 ## Deploy Kubernetes
 
 Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_ and, by default, a couple VMs with everything needed to become Kubernetes minions.
-You can change the number of minions and/or the Kubernetes version by setting environment variables **NUM_INSTANCES** and **KUBERNETES_VERSION**, respectively. [You can find more details below](#customization).
+You can change the number of minions and/or the Kubernetes version by setting environment variables **NUM_NODES** and **KUBERNETES_VERSION**, respectively. [You can find more details below](#customization).
 
 ```
 vagrant up
@@ -60,10 +60,10 @@ kubectl cluster-info
 vagrant destroy
 ```
 
-If you've set `NUM_INSTANCES` or any other variable when deploying, please make sure you set it in `vagrant destroy` call above, like:
+If you've set `NUM_NODES` or any other variable when deploying, please make sure you set it in `vagrant destroy` call above, like:
 
 ```
-NUM_INSTANCES=3 vagrant destroy
+NUM_NODES=3 vagrant destroy
 ```
 
 ## Notes about hypervisors
@@ -94,7 +94,7 @@ If you want to use Docker private repositories look for **DOCKERCFG** bellow.
 ### Environment variables
 Most aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
 
- - **NUM_INSTANCES** sets the number of nodes (minions).
+ - **NUM_NODES** sets the number of nodes (minions).
 
    Defaults to **2**.
  - **CHANNEL** sets the default CoreOS channel to be used in the VMs.
@@ -144,7 +144,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would do...
 
 ```
-NODE_MEM=4096 NODE_CPUS=2 NUM_INSTANCES=3 vagrant up
+NODE_MEM=4096 NODE_CPUS=2 NUM_NODES=3 vagrant up
 ```
 
 **Please do note** that if you were using non default settings to startup your
@@ -193,7 +193,7 @@ source ~/.bash_profile
 This will start one `master` and two `minion` nodes, download Kubernetes binaries start all needed services.
 A Docker mirror cache will be provisioned in the `master`, to speed up container provisioning. This can take some time depending on your Internet connection speed.
 
-Please do note that, at any time, you can change the number of `minions` by setting the `NUM_INSTANCES` value in subsequent `vagrant up` invocations.
+Please do note that, at any time, you can change the number of `minions` by setting the `NUM_NODES` value in subsequent `vagrant up` invocations.
 
 ### Usage
 
