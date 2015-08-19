@@ -37,7 +37,7 @@ vagrant up
 
 ### Linux or MacOS host
 
-Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal windo, run:
+Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal window, run:
 
 ```
 source ~/.bash_profile
