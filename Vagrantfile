@@ -87,7 +87,7 @@ if COREOS_VERSION == "latest"
     open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', ''))
 end
 
-NUM_NODES = ENV['NUM_NODES'] || 2
+NODES = ENV['NODES'] || 2
 
 MASTER_MEM = ENV['MASTER_MEM'] || 1024
 MASTER_CPUS = ENV['MASTER_CPUS'] || 1
@@ -164,7 +164,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # most http tools, like wget and curl do not undestand IP range
     # thus adding each node one by one to no_proxy
     no_proxies = NO_PROXY.split(",")
-    (1..(NUM_NODES.to_i + 1)).each do |i|
+    (1..(NODES.to_i + 1)).each do |i|
       vm_ip_addr = "#{BASE_IP_ADDR}.#{i+100}"
       Object.redefine_const(:NO_PROXY,
         "#{NO_PROXY},#{vm_ip_addr}") unless no_proxies.include?(vm_ip_addr)
@@ -175,7 +175,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.proxy.enabled = { docker: false }
   end
 
-  (1..(NUM_NODES.to_i + 1)).each do |i|
+  (1..(NODES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
       ETCD_SEED_CLUSTER = "#{hostname}=http://#{BASE_IP_ADDR}.#{i+100}:2380"
