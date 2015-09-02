@@ -58,7 +58,7 @@ Vagrant.require_version ">= 1.6.0"
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
-SSL_FILE = File.join(File.dirname(__FILE__), "kube-serviceaccount.key")
+CERTS_SCRIPT = File.join(File.dirname(__FILE__), "make-certs.sh")
 
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
@@ -411,8 +411,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
       end
 
-      if File.exist?(SSL_FILE)
-        kHost.vm.provision :file, :source => "#{SSL_FILE}", :destination => "/home/core/kube-serviceaccount.key"
+      if File.exist?(CERTS_SCRIPT)
+        kHost.vm.provision :file, :source => "#{CERTS_SCRIPT}", :destination => "/tmp/make-certs.sh"
       end
 
       if File.exist?(cfg)

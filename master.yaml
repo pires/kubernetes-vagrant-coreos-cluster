@@ -134,20 +134,37 @@ coreos:
         ExecStart=/usr/bin/chmod +x /opt/bin/kube-apiserver
         ExecStart=/usr/bin/chmod +x /opt/bin/kube-controller-manager
         ExecStart=/usr/bin/chmod +x /opt/bin/kube-scheduler
+    - name: kube-certs.service
+      command: start
+      content: |
+        [Unit]
+        Description=Generate Kubernetes API Server certificates
+        ConditionPathExists=!/srv/kubernetes/.certs.lock
+        Requires=network-online.target
+        After=network-online.target
+        [Service]
+        ExecStartPre=-/usr/sbin/groupadd -r kube-cert
+        ExecStartPre=/usr/bin/chmod u=rwx,go= /tmp/make-certs.sh
+        ExecStart=/tmp/make-certs.sh $public_ipv4 IP:$public_ipv4,IP:10.100.0.1,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.__DNS_DOMAIN__
+        Type=oneshot
+        RemainAfterExit=true
     - name: kube-apiserver.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=etcd2.service docker-cache.service fleet.service docker.service flanneld.service kube-install.service
-        After=etcd2.service docker-cache.service fleet.service docker.service flanneld.service kube-install.service
+        Requires=etcd2.service docker-cache.service fleet.service docker.service flanneld.service kube-install.service kube-certs.service
+        After=etcd2.service docker-cache.service fleet.service docker.service flanneld.service kube-install.service kube-certs.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
         ExecStart=/opt/bin/kube-apiserver \
-          --service_account_key_file=/home/core/kube-serviceaccount.key \
+          --client-ca-file=/srv/kubernetes/ca.crt \
+          --tls-cert-file=/srv/kubernetes/server.cert \
+          --tls-private-key-file=/srv/kubernetes/server.key \
+          --admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
+          --service_account_key_file=/srv/kubernetes/server.key \
           --service_account_lookup=false \
-          --admission_control=NamespaceLifecycle,NamespaceAutoProvision,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
           --allow_privileged=true \
           --insecure_bind_address=0.0.0.0 \
           --insecure_port=8080 \
@@ -172,7 +189,8 @@ coreos:
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
         ExecStart=/opt/bin/kube-controller-manager \
-          --service_account_private_key_file=/home/core/kube-serviceaccount.key \
+          --root-ca-file=/srv/kubernetes/ca.crt \
+          --service-account-private-key-file=/srv/kubernetes/server.key \
           --master=$private_ipv4:8080 \
           --cloud_provider=__CLOUDPROVIDER__ \
           --pod_eviction_timeout=30s \
