@@ -140,11 +140,21 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    [Possible values are `gce`, `gke`, `aws`, `azure`, `vagrant`, `vsphere`, `libvirt-coreos` and `juju`](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/cluster/kube-env.sh#L17). ~~Defaults to `vagrant`,~~ because of https://github.com/GoogleCloudPlatform/kubernetes/issues/9049.
 
+ - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
 
-So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would do...
+   Defaults to `false`.
+
+
+So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would run:
 
 ```
 NODE_MEM=4096 NODE_CPUS=2 NODES=3 vagrant up
+```
+
+or with Kubernetes UI:
+
+```
+NODE_MEM=4096 NODE_CPUS=2 NODES=3 USE_KUBE_UI=true vagrant up
 ```
 
 **Please do note** that if you were using non default settings to startup your
