@@ -102,7 +102,7 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
-PLUGIN_KUBE_UI = ENV['PLUGIN_KUBE_UI'] || false
+USE_KUBE_UI = ENV['USE_KUBE_UI'] || false
 
 if enable_proxy
   HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy']
@@ -226,7 +226,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "chmod +x temp/setup"
 
           info "Configuring Kubernetes cluster DNS..."
-          system "cp dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
+          system "cp plugins/dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
           system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
           system "sed -e 's|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
@@ -235,9 +235,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
-          if PLUGIN_KUBE_UI
+          if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-controller.yaml"), :destination => "/home/core/kube-ui-controller.yaml"
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-service.yaml"), :destination => "/home/core/kube-ui-service.yaml"
           end          
@@ -291,11 +291,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             if OS.windows?
               run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
             else
-              system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f dns/dns-service.yaml"
+              system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f plugins/dns/dns-service.yaml"
             end
           end
 
-          if PLUGIN_KUBE_UI
+          if USE_KUBE_UI
             info "Configuring Kubernetes kube-ui..."
             res, uri.path = nil, '/api/v1/namespaces/default/replicationControllers/kube-ui-v2'
             begin
@@ -306,7 +306,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               if OS.windows?
                 run_remote "/opt/bin/kubectl create -f /home/core/kube-ui-controller.yaml"
               else
-                system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f /home/core/kube-ui-controller.yaml"
+                system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f plugins/kube-ui/kube-ui-controller.yaml"
               end
             end
 
@@ -319,7 +319,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               if OS.windows?
                 run_remote "/opt/bin/kubectl create -f /home/core/kube-ui-service.yaml"
               else
-                system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f /home/core/kube-ui-service.yaml"
+                system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f plugins/kube-ui/kube-ui-service.yaml"
               end
             end
           end
