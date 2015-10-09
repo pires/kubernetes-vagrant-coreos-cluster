@@ -104,6 +104,8 @@ SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 USE_KUBE_UI = ENV['USE_KUBE_UI'] || false
 
+BOX_TIMEOUT_COUNT = ENV['BOX_TIMEOUT_COUNT'] || 50
+
 if enable_proxy
   HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy']
   HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy']
@@ -240,7 +242,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-controller.yaml"), :destination => "/home/core/kube-ui-controller.yaml"
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-service.yaml"), :destination => "/home/core/kube-ui-service.yaml"
-          end          
+          end
         end
 
         kHost.trigger.after [:up, :resume] do
@@ -266,7 +268,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             rescue
               sleep 10
             end
-            break if res.is_a? Net::HTTPSuccess or j >= 50
+            break if res.is_a? Net::HTTPSuccess or j >= BOX_TIMEOUT_COUNT
           end
 
           res, uri.path = nil, '/api/v1/namespaces/default/replicationControllers/kube-dns'
@@ -341,7 +343,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             rescue
               sleep 10
             end
-            break if hasResponse or j >= 50
+            break if hasResponse or j >= BOX_TIMEOUT_COUNT
           end
         end
       end
