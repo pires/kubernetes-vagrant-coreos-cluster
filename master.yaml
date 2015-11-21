@@ -55,19 +55,16 @@ coreos:
         Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
         ExecStartPre=-/usr/bin/docker kill docker-registry
         ExecStartPre=-/usr/bin/docker rm docker-registry
-        ExecStartPre=/usr/bin/docker pull quay.io/devops/docker-registry:latest
-        # GUNICORN_OPTS is an workaround for
-        # https://github.com/docker/docker-registry/issues/892
+        ExecStartPre=/usr/bin/docker pull registry:2.2.0
         ExecStart=/usr/bin/docker run --rm --net host --name docker-registry \
-          -e STANDALONE=false \
-          -e GUNICORN_OPTS=[--preload] \
-          -e MIRROR_SOURCE=https://registry-1.docker.io \
-          -e MIRROR_SOURCE_INDEX=https://index.docker.io \
-          -e MIRROR_TAGS_CACHE_TTL=1800 \
+          -v /srv/kubernetes:/certs \
+          -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io \
+          -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/server.cert \
+          -e REGISTRY_HTTP_TLS_KEY=/certs/server.key \
           __PROXY_LINE__-e HTTP_PROXY=__HTTP_PROXY__ \
           __PROXY_LINE__-e HTTPS_PROXY=__HTTPS_PROXY__ \
           __PROXY_LINE__-e NO_PROXY=__NO_PROXY__ \
-          quay.io/devops/docker-registry:latest
+          registry:2.2.0
     - name: fleet.service
       command: start
     - name: flanneld.service
@@ -90,7 +87,7 @@ coreos:
             Requires=docker-cache.service flanneld.service
             After=docker-cache.service flanneld.service
             [Service]
-            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=http://$private_ipv4:5000"
+            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=https://$private_ipv4:5000"
         - __PROXY_LINE__name: http-proxy.conf
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]

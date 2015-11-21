@@ -58,7 +58,7 @@ coreos:
             Requires=flanneld.service
             After=flanneld.service
             [Service]
-            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=http://__MASTER_IP__:5000"
+            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=https://__MASTER_IP__:5000"
             ExecStartPre=/opt/bin/wupiao __MASTER_IP__:5000
     - __PROXY_LINE__name: http-proxy.conf
       __PROXY_LINE__content: |
