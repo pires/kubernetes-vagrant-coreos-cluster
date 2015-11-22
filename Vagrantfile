@@ -232,18 +232,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
           system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
           system "sed -e 's|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
-        end
 
-        if OS.windows?
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          if OS.windows?
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
-          if USE_KUBE_UI
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-controller.yaml"), :destination => "/home/core/kube-ui-controller.yaml"
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-service.yaml"), :destination => "/home/core/kube-ui-service.yaml"
+            if USE_KUBE_UI
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-controller.yaml"), :destination => "/home/core/kube-ui-controller.yaml"
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-service.yaml"), :destination => "/home/core/kube-ui-service.yaml"
+            end
           end
-        end
+      end
 
         kHost.trigger.after [:up, :resume] do
           info "Sanitizing stuff..."
@@ -252,13 +252,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
 
         kHost.trigger.after [:up] do
-          info "Installing kubectl for the kubernetes version we just bootstrapped..."
-          if OS.windows?
-            run_remote "sudo -u core /bin/sh /home/core/kubectlsetup install"
-          else
-            system "./temp/setup install"
-          end
-
           info "Waiting for Kubernetes master to become ready..."
           j, uri, res = 0, URI("http://#{MASTER_IP}:8080"), nil
           loop do
@@ -269,6 +262,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               sleep 10
             end
             break if res.is_a? Net::HTTPSuccess or j >= BOX_TIMEOUT_COUNT
+          end
+
+          info "Installing kubectl for the Kubernetes version we just bootstrapped..."
+          if OS.windows?
+            run_remote "sudo -u core /bin/sh /home/core/kubectlsetup install"
+          else
+            system "./temp/setup install"
           end
 
           res, uri.path = nil, '/api/v1/namespaces/default/replicationControllers/kube-dns'
