@@ -239,6 +239,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
             if USE_KUBE_UI
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-controller.yaml"), :destination => "/home/core/kube-ui-controller.yaml"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/kube-ui/kube-ui-service.yaml"), :destination => "/home/core/kube-ui-service.yaml"
             end
@@ -271,7 +272,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             system "./temp/setup install"
           end
 
-          res, uri.path = nil, '/api/v1/namespaces/default/replicationControllers/kube-dns'
+          res, uri.path = nil, '/api/v1/namespaces/default/replicationcontrollers/kube-dns'
           begin
             res = Net::HTTP.get_response(uri)
           rescue
@@ -299,7 +300,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           if USE_KUBE_UI
             info "Configuring Kubernetes kube-ui..."
-            res, uri.path = nil, '/api/v1/namespaces/default/replicationControllers/kube-ui-v2'
+            res, uri.path = nil, '/api/v1/namespaces/kube-system'
+            begin
+              res = Net::HTTP.get_response(uri)
+            rescue
+            end
+            if not res.is_a? Net::HTTPSuccess
+              if OS.windows?
+                run_remote "/opt/bin/kubectl create -f /home/core/kube-system.yaml"
+              else
+                system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f kube-system.yaml"
+              end
+            end
+
+            res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-ui-v3'
             begin
               res = Net::HTTP.get_response(uri)
             rescue
@@ -312,7 +326,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               end
             end
 
-            res, uri.path = nil, '/api/v1/namespaces/default/services/kube-ui'
+            res, uri.path = nil, '/api/v1/namespaces/kube-system/services/kube-ui'
             begin
               res = Net::HTTP.get_response(uri)
             rescue
@@ -324,6 +338,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                 system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f plugins/kube-ui/kube-ui-service.yaml"
               end
             end
+
+            info "Kubernetes kube-ui will be available on http://#{MASTER_IP}:8080/ui"
           end
 
         end
