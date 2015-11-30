@@ -228,6 +228,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "chmod +x temp/setup"
 
           info "Configuring Kubernetes cluster DNS..."
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
           system "cp plugins/dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
           system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
           system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
@@ -279,8 +280,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
           if not res.is_a? Net::HTTPSuccess
             if OS.windows?
+              run_remote "/opt/bin/kubectl create -f /home/core/kube-system.yaml"
               run_remote "/opt/bin/kubectl create -f /home/core/dns-controller.yaml"
             else
+              system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f kube-system.yaml"
               system "KUBERNETES_MASTER=\"http://#{MASTER_IP}:8080\" kubectl create -f temp/dns-controller.yaml"
             end
           end
