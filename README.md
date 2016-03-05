@@ -24,7 +24,8 @@ brew install wget
 
 ### Windows
 
-The [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) will be installed in order to enable NFS shares.
+- The [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) will be installed in order to enable NFS shares.
+- The project will run some bash script under the VirtualMachines. These scripts line ending need to be in LF. Git for windows set `core.autocrlf true` by default at the installation time. When you clone this project repository, this parameter (set to true) ask git to change all line ending to CRLF. This behavior need to be changed before cloning the repository (or after for each files by hand). We recommand to turn this to off by running `git config --global core.autocrlf false` before cloning. Then, after cloning, do not forget to turn the behavior back if you want to run other windows projects: `git config --global core.autocrlf true`.
 
 ## Deploy Kubernetes
 
