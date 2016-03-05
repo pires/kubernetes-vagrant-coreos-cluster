@@ -215,6 +215,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       if vmName == "master"
         kHost.trigger.before [:up, :provision] do
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
+          info "Using CoreOS version : #{COREOS_VERSION}"
           sedInplaceArg = OS.mac? ? " ''" : ""
           system "cp setup.tmpl temp/setup"
           system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i#{sedInplaceArg} ./temp/setup"
