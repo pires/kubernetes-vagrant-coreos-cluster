@@ -77,6 +77,8 @@ coreos:
         Description=Download/Install Kubernetes
         Requires=network-online.target
         After=network-online.target
+        ConditionPathExists=!/opt/bin/kube-proxy
+        ConditionPathExists=!/opt/bin/kubelet
         [Service]
         Type=oneshot
         EnvironmentFile=/etc/environment

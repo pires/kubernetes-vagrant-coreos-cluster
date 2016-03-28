@@ -31,7 +31,7 @@ esac
 if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
   echo "Downloading and installing ${PLATFORM} version of 'kubectl' v${KUBERNETES_VERSION} into ${targetDir}. This may take a couple minutes, depending on your internet speed.."
   [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
-  sudo -E wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
+  [ -e ${targetDir}/kubectl ] || sudo -E wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
   [ -x ${targetDir}/kubectl ] || sudo chmod +x ${targetDir}/kubectl
 
   # use sed to replace current values, if any; create profile file if not exists
