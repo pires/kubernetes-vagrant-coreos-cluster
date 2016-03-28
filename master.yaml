@@ -101,6 +101,9 @@ coreos:
         Requires=network-online.target kube-certs.service
         After=network-online.target kube-certs.service
         ConditionPathExists=/srv/kubernetes
+        ConditionPathExists=!/opt/bin/kube-apiserver
+        ConditionPathExists=!/opt/bin/kube-controller-manager
+        ConditionPathExists=!/opt/bin/kube-scheduler
         [Service]
         Type=oneshot
         EnvironmentFile=/etc/environment
