@@ -276,8 +276,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           # set cluster
           if OS.windows?
               run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --http://#{MASTER_IP}:8080"
+              run_remote "/opt/bin/kubectl config set-context local --cluster=local --namespace=default"
+              run_remote "/opt/bin/kubectl config use-context local"
             else
               "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --http://#{MASTER_IP}:8080"
+              "kubectl config set-context local --cluster=local --namespace=default"
+              "kubectl config use-context local"
             end
 
           res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-dns'
@@ -287,11 +291,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
           if not res.is_a? Net::HTTPSuccess
             if OS.windows?
-              run_remote "/opt/bin/kubectl --cluster=local create -f /home/core/kube-system.yaml"
-              run_remote "/opt/bin/kubectl --cluster=local create -f /home/core/dns-controller.yaml"
+              run_remote "/opt/bin/kubectl create -f /home/core/kube-system.yaml"
+              run_remote "/opt/bin/kubectl create -f /home/core/dns-controller.yaml"
             else
-              system "kubectl --cluster=local create -f kube-system.yaml"
-              system "kubectl --cluster=local create -f temp/dns-controller.yaml"
+              system "kubectl create -f kube-system.yaml"
+              system "kubectl create -f temp/dns-controller.yaml"
             end
           end
 
@@ -302,9 +306,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
           if not res.is_a? Net::HTTPSuccess
             if OS.windows?
-              run_remote "/opt/bin/kubectl create --cluster=local -f /home/core/dns-service.yaml"
+              run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
             else
-              system "kubectl --cluster=local create -f plugins/dns/dns-service.yaml"
+              system "kubectl create -f plugins/dns/dns-service.yaml"
             end
           end
 
@@ -317,9 +321,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
             if not res.is_a? Net::HTTPSuccess
               if OS.windows?
-                run_remote "/opt/bin/kubectl --cluster=local create -f /home/core/kube-system.yaml"
+                run_remote "/opt/bin/kubectl create -f /home/core/kube-system.yaml"
               else
-                system "kubectl --cluster=local create -f kube-system.yaml"
+                system "kubectl create -f kube-system.yaml"
               end
             end
 
@@ -330,9 +334,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
             if not res.is_a? Net::HTTPSuccess
               if OS.windows?
-                run_remote "/opt/bin/kubectl --cluster=local create -f /home/core/kube-ui-controller.yaml"
+                run_remote "/opt/bin/kubectl create -f /home/core/kube-ui-controller.yaml"
               else
-                system "kubectl --cluster=local create -f plugins/kube-ui/kube-ui-controller.yaml"
+                system "kubectl create -f plugins/kube-ui/kube-ui-controller.yaml"
               end
             end
 
@@ -343,9 +347,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
             if not res.is_a? Net::HTTPSuccess
               if OS.windows?
-                run_remote "/opt/bin/kubectl --cluster=local create -f /home/core/kube-ui-service.yaml"
+                run_remote "/opt/bin/kubectl create -f /home/core/kube-ui-service.yaml"
               else
-                system "kubectl --cluster=local create -f plugins/kube-ui/kube-ui-service.yaml"
+                system "kubectl create -f plugins/kube-ui/kube-ui-service.yaml"
               end
             end
 
