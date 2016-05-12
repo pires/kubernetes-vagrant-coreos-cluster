@@ -50,20 +50,10 @@ coreos:
     - name: docker.service
       command: start
       drop-ins:
-        - name: 51-docker-mirror.conf
-          content: |
-            [Unit]
-            # making sure that flanneld finished startup, otherwise containers
-            # won't land in flannel's network...
-            Requires=flanneld.service
-            After=flanneld.service
-            [Service]
-            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=http://__MASTER_IP__:5000"
-            ExecStartPre=/opt/bin/wupiao __MASTER_IP__:5000
-    - __PROXY_LINE__name: http-proxy.conf
-      __PROXY_LINE__content: |
-        __PROXY_LINE__[Service]
-        __PROXY_LINE__EnvironmentFile=/etc/environment
+        - __PROXY_LINE__name: http-proxy.conf
+          __PROXY_LINE__content: |
+          __PROXY_LINE__[Service]
+          __PROXY_LINE__EnvironmentFile=/etc/environment
     - name: early-docker.service
       drop-ins:
         - __PROXY_LINE__name: http-proxy.conf
