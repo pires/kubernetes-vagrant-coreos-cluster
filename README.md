@@ -38,13 +38,7 @@ vagrant up
 
 ### Linux or MacOS host
 
-Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal window, run:
-
-```
-source ~/.bash_profile
-```
-
-New terminal windows will have this set for you.
+Kubernetes cluster is ready. Use `kubectl` to manage it.
 
 ### Windows host
 
@@ -110,16 +104,16 @@ Most aspects of your cluster setup can be customized with environment variables.
  - **SERIAL_LOGGING** if set to *true* will allow logging from the VMs' serial console.
 
    Defaults to **false**. Only use this if you *really* know what you are doing.
- - **MASTER_MEM** sets the master's VM memory.
+ - **MASTER_MEM** sets the master node VM memory.
 
    Defaults to **1024** (in MB)
- - **MASTER_CPUS** sets the number os vCPUs to be used by the master's VM.
+ - **MASTER_CPUS** sets the number of vCPUs to be used by the master VM.
 
    Defaults to **1**.
- - **NODE_MEM** sets the worker nodes' (aka minions in Kubernetes lingo) VM memory.
+ - **NODE_MEM** sets the worker nodes VM memory.
 
    Defaults to **2048** (in MB)
- - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs.
+ - **NODE_CPUS** sets the number of vCPUs to be used by node VMs.
 
    Defaults to **1**.
  - **DOCKERCFG** sets the location of your private docker repositories (and keys) configuration. However, this is only usable if you set **USE_DOCKERCFG=true**.
@@ -190,7 +184,6 @@ you which to mount the allowed syntax is...
 
 ```
 vagrant up
-source ~/.bash_profile
 ```
 
 This will start one `master` and two `minion` nodes, download Kubernetes binaries start all needed services.
