@@ -275,11 +275,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           
           # set cluster
           if OS.windows?
-              run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --http://#{MASTER_IP}:8080"
+              run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
               run_remote "/opt/bin/kubectl config set-context local --cluster=local --namespace=default"
               run_remote "/opt/bin/kubectl config use-context local"
             else
-              "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --http://#{MASTER_IP}:8080"
+              "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
               "kubectl config set-context local --cluster=local --namespace=default"
               "kubectl config use-context local"
             end
