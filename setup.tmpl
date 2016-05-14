@@ -29,10 +29,23 @@ case "$PLATFORM" in
 esac
 
 if [[ "$#" -eq 1 && "$1" == "install"  ]] ; then
-  echo "Downloading and installing ${PLATFORM} version of 'kubectl' v${KUBERNETES_VERSION} into ${targetDir}. This may take a couple minutes, depending on your internet speed.."
-  [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
-  sudo -E wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
-  [ -x ${targetDir}/kubectl ] || sudo chmod +x ${targetDir}/kubectl
+  doinstall="true"
+  if [ -x ${targetDir}/kubectl ]; then
+    installedversion=`${targetDir}/kubectl version | awk -F":" '{print $5}' | head -n1 | awk -F"," {'print $1'} | tr -d "\"" | tr -d "v"`
+    if [ "$installedversion" == "${KUBERNETES_VERSION}" ]; then
+      echo "kubectl already installed in version '$installedversion'. Skipping install."
+      doinstall="false"
+    else
+      echo "kubectl installed in version '$installedversion' instead of '${KUBERNETES_VERSION}'. Reinstalling."
+    fi
+  fi
+
+  if [ "$doinstall" == "true" ]; then 
+    echo "Downloading and installing ${PLATFORM} version of 'kubectl' v${KUBERNETES_VERSION} into ${targetDir}. This may take a couple minutes, depending on your internet speed.."
+    [ -d ${targetDir} ] || sudo mkdir -p ${targetDir}
+    sudo -E wget -q --no-check-certificate -L -O ${targetDir}/kubectl "${KUB_URL}"
+    [ -x ${targetDir}/kubectl ] || sudo chmod +x ${targetDir}/kubectl
+  fi
 
   # use sed to replace current values, if any; create profile file if not exists
   touch -a $HOME/.bash_profile
