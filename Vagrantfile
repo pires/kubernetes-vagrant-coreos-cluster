@@ -103,6 +103,7 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 USE_KUBE_UI = ENV['USE_KUBE_UI'] || false
+SYNC_FOLDERS = ENV['SYNC_FOLDERS'] || false
 
 BOX_TIMEOUT_COUNT = ENV['BOX_TIMEOUT_COUNT'] || 50
 
@@ -121,8 +122,10 @@ validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
 Object.redefine_const(:CLOUD_PROVIDER,
   '') unless validCloudProviders.include?(CLOUD_PROVIDER)
 
-# Read YAML file with mountpoint details
-MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
+if SYNC_FOLDERS
+  # Read YAML file with mountpoint details
+  MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
+end
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
@@ -272,7 +275,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           else
             system "./temp/setup install"
           end
-          
+
           # set cluster
           if OS.windows?
               run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
@@ -442,31 +445,33 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       # you can override this in synced_folders.yaml
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
 
-      begin
-        MOUNT_POINTS.each do |mount|
-          mount_options = ""
-          disabled = false
-          nfs =  true
-          if mount['mount_options']
-            mount_options = mount['mount_options']
-          end
-          if mount['disabled']
-            disabled = mount['disabled']
-          end
-          if mount['nfs']
-            nfs = mount['nfs']
-          end
-          if File.exist?(File.expand_path("#{mount['source']}"))
-            if mount['destination']
-              kHost.vm.synced_folder "#{mount['source']}", "#{mount['destination']}",
-                id: "#{mount['name']}",
-                disabled: disabled,
-                mount_options: ["#{mount_options}"],
-                nfs: nfs
+      if SYNC_FOLDERS
+        begin
+          MOUNT_POINTS.each do |mount|
+            mount_options = ""
+            disabled = false
+            nfs =  true
+            if mount['mount_options']
+              mount_options = mount['mount_options']
+            end
+            if mount['disabled']
+              disabled = mount['disabled']
+            end
+            if mount['nfs']
+              nfs = mount['nfs']
+            end
+            if File.exist?(File.expand_path("#{mount['source']}"))
+              if mount['destination']
+                kHost.vm.synced_folder "#{mount['source']}", "#{mount['destination']}",
+                  id: "#{mount['name']}",
+                  disabled: disabled,
+                  mount_options: ["#{mount_options}"],
+                  nfs: nfs
+              end
             end
           end
+        rescue
         end
-      rescue
       end
 
       if USE_DOCKERCFG && File.exist?(DOCKERCFG)
