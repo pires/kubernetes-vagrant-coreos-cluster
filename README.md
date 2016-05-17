@@ -72,7 +72,7 @@ VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
 
 ### Parallels
 
-If you are using **Parallels Desktop**, you need to install **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider 
+If you are using **Parallels Desktop**, you need to install **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider
 ```
 vagrant plugin install vagrant-parallels
 ```
@@ -138,6 +138,10 @@ Most aspects of your cluster setup can be customized with environment variables.
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
 
    Defaults to `false`.
+
+ - **SYNC_FOLDERS** defines whether to sync folders via NFS
+
+   Defaults to `false`
 
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would run:
