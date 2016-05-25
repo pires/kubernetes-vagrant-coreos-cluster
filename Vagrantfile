@@ -282,9 +282,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               run_remote "/opt/bin/kubectl config set-context local --cluster=local --namespace=default"
               run_remote "/opt/bin/kubectl config use-context local"
             else
-              "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
-              "kubectl config set-context local --cluster=local --namespace=default"
-              "kubectl config use-context local"
+              system "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
+              system "kubectl config set-context local --cluster=local --namespace=default"
+              system "kubectl config use-context local"
             end
 
           info "Configuring Kubernetes DNS..."
