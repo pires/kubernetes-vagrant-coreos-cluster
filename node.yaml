@@ -60,31 +60,14 @@ coreos:
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
-    - name: kube-install.service
-      command: start
-      content: |
-        [Unit]
-        Description=Download/Install Kubernetes
-        Requires=network-online.target
-        After=network-online.target
-        ConditionPathExists=!/opt/bin/kube-proxy
-        ConditionPathExists=!/opt/bin/kubelet
-        [Service]
-        Type=oneshot
-        EnvironmentFile=/etc/environment
-        ExecStart=-/usr/bin/mkdir -p /opt/bin
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-proxy
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kubelet
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-proxy
-        ExecStart=/usr/bin/chmod +x /opt/bin/kubelet
     - name: kube-proxy.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes Proxy
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=kube-install.service
-        After=kube-install.service
+        Requires=network-online.target
+        After=network-online.target
         [Service]
         ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
         ExecStart=/opt/bin/kube-proxy \
@@ -98,8 +81,8 @@ coreos:
         [Unit]
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=kube-install.service
-        After=kube-install.service
+        Requires=network-online.target
+        After=network-online.target
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /opt/kubernetes/manifests/
         ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080

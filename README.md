@@ -139,11 +139,6 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to `false`.
 
- - **SYNC_FOLDERS** defines whether to sync folders via NFS
-
-   Defaults to `false`
-
-
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would run:
 
 ```

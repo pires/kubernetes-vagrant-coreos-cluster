@@ -64,27 +64,6 @@ coreos:
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
-    - name: kube-install.service
-      command: start
-      content: |
-        [Unit]
-        Description=Download/Install Kubernetes
-        Requires=network-online.target kube-certs.service
-        After=network-online.target kube-certs.service
-        ConditionPathExists=/srv/kubernetes
-        ConditionPathExists=!/opt/bin/kube-apiserver
-        ConditionPathExists=!/opt/bin/kube-controller-manager
-        ConditionPathExists=!/opt/bin/kube-scheduler
-        [Service]
-        Type=oneshot
-        EnvironmentFile=/etc/environment
-        ExecStart=-/usr/bin/mkdir -p /opt/bin
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-apiserver
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-controller-manager
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-scheduler
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-apiserver
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-controller-manager
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-scheduler
     - name: kube-certs.service
       command: start
       content: |
@@ -105,8 +84,8 @@ coreos:
         [Unit]
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=etcd2.service fleet.service docker.service flanneld.service kube-install.service
-        After=etcd2.service fleet.service docker.service flanneld.service kube-install.service
+        Requires=etcd2.service fleet.service docker.service flanneld.service
+        After=etcd2.service fleet.service docker.service flanneld.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
         ExecStart=/opt/bin/kube-apiserver \

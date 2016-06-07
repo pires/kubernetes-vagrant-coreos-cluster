@@ -5,6 +5,7 @@ require 'fileutils'
 require 'net/http'
 require 'open-uri'
 require 'json'
+require 'date'
 
 class Module
   def redefine_const(name, value)
@@ -103,7 +104,6 @@ DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
 USE_KUBE_UI = ENV['USE_KUBE_UI'] || false
-SYNC_FOLDERS = ENV['SYNC_FOLDERS'] || false
 
 BOX_TIMEOUT_COUNT = ENV['BOX_TIMEOUT_COUNT'] || 50
 
@@ -122,10 +122,12 @@ validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
 Object.redefine_const(:CLOUD_PROVIDER,
   '') unless validCloudProviders.include?(CLOUD_PROVIDER)
 
-if SYNC_FOLDERS
-  # Read YAML file with mountpoint details
-  MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
-end
+# Read YAML file with mountpoint details
+MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
+
+REQUIRED_BINARIES_FOR_MASTER = ['kube-apiserver', 'kube-controller-manager', 'kube-scheduler']
+REQUIRED_BINARIES_FOR_NODES = ['kube-proxy', 'kubelet']
+REQUIRED_BINARIES = REQUIRED_BINARIES_FOR_MASTER + REQUIRED_BINARIES_FOR_NODES
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
@@ -212,11 +214,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         exit
       end
 
+      binaries_host_dir="./binaries"
+      version_file="#{binaries_host_dir}/version"
+
       # vagrant-triggers has no concept of global triggers so to avoid having
       # then to run as many times as the total number of VMs we only call them
       # in the master (re: emyl/vagrant-triggers#13)...
       if vmName == "master"
         kHost.trigger.before [:up, :provision] do
+          info "#{Time.now}: setting up Kubernetes master..."
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
           sedInplaceArg = OS.mac? ? " ''" : ""
           system "cp setup.tmpl temp/setup"
@@ -229,6 +235,36 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             system "sed -e '/__PROXY_LINE__/d' -i#{sedInplaceArg} ./temp/setup"
           end
           system "chmod +x temp/setup"
+
+          info "Downloading Kubernetes binaries if version mismatch or binaries not present.."
+          REQUIRED_BINARIES.each do |filename|
+          system("
+            to_download=0
+            file='#{binaries_host_dir}/#{filename}'
+            echo \"Checking for ${file} with version v#{KUBERNETES_VERSION}..\"
+
+            if [ -f \"#{version_file}\" ]; then
+              LAST_VERSION=`cat \"#{version_file}\"`
+            fi
+            if [ \"$LAST_VERSION\" != \"#{KUBERNETES_VERSION}\" ]; then
+              echo \"Versions mismatch [current: $LAST_VERSION, desired: #{KUBERNETES_VERSION}]\"
+              to_download=1
+            else
+              echo \"Versions match, checking if binary exist..\"
+              if [ ! -f $file ]; then
+                to_download=1
+              fi
+            fi
+
+            if [ $to_download == 1 ]; then
+              url=\"https://storage.googleapis.com/kubernetes-release/release/v#{KUBERNETES_VERSION}/bin/linux/amd64/#{filename}\"
+              echo \"Trying to download ${url}..\"
+              (curl -s -k -L -o $file \"$url\") || true
+            fi
+          ")
+          end
+          # only write current version after all files have been downloaded
+          system("echo #{KUBERNETES_VERSION} > #{version_file}")
 
           info "Configuring Kubernetes cluster DNS..."
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
@@ -267,6 +303,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               sleep 10
             end
             break if res.is_a? Net::HTTPSuccess or j >= BOX_TIMEOUT_COUNT
+          end
+          if res.is_a? Net::HTTPSuccess
+            info "#{Time.now}: successfully deployed #{vmName}"
+          else
+            info "#{Time.now}: failed to deploy #{vmName} within timeout count of #{BOX_TIMEOUT_COUNT}"
           end
 
           info "Installing kubectl for the Kubernetes version we just bootstrapped..."
@@ -379,6 +420,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
             break if hasResponse or j >= BOX_TIMEOUT_COUNT
           end
+          if hasResponse
+            info "#{Time.now}: successfully deployed #{vmName}"
+          else
+            info "#{Time.now}: failed to deploy #{vmName} within timeout count of #{BOX_TIMEOUT_COUNT}"
+          end
         end
       end
 
@@ -442,36 +488,46 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       kHost.vm.network :private_network, ip: "#{BASE_IP_ADDR}.#{i+100}"
+
       # you can override this in synced_folders.yaml
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
 
-      if SYNC_FOLDERS
-        begin
-          MOUNT_POINTS.each do |mount|
-            mount_options = ""
-            disabled = false
-            nfs =  true
-            if mount['mount_options']
-              mount_options = mount['mount_options']
-            end
-            if mount['disabled']
-              disabled = mount['disabled']
-            end
-            if mount['nfs']
-              nfs = mount['nfs']
-            end
-            if File.exist?(File.expand_path("#{mount['source']}"))
-              if mount['destination']
-                kHost.vm.synced_folder "#{mount['source']}", "#{mount['destination']}",
-                  id: "#{mount['name']}",
-                  disabled: disabled,
-                  mount_options: ["#{mount_options}"],
-                  nfs: nfs
-              end
+      begin
+        MOUNT_POINTS.each do |mount|
+          mount_options = ""
+          disabled = false
+          nfs =  true
+          if mount['mount_options']
+            mount_options = mount['mount_options']
+          end
+          if mount['disabled']
+            disabled = mount['disabled']
+          end
+          if mount['nfs']
+            nfs = mount['nfs']
+          end
+          if File.exist?(File.expand_path("#{mount['source']}"))
+            if mount['destination']
+              kHost.vm.synced_folder "#{mount['source']}", "#{mount['destination']}",
+                id: "#{mount['name']}",
+                disabled: disabled,
+                mount_options: ["#{mount_options}"],
+                nfs: nfs
             end
           end
-        rescue
         end
+      rescue
+      end
+
+      # copying Kubernetes binaries to VM
+      (vmName == 'master' ? REQUIRED_BINARIES_FOR_MASTER : REQUIRED_BINARIES_FOR_NODES).each do |filename|
+        file="#{binaries_host_dir}/#{filename}"
+        kHost.vm.provision :shell, :privileged => true, inline: <<-EOF
+          echo "Copying host:#{file} to vm:/opt/bin/#{filename}.."
+          mkdir -p /opt/bin
+          cp "/vagrant/#{binaries_host_dir}/#{filename}" "/opt/bin/#{filename}"
+          chmod +x "/opt/bin/#{filename}"
+        EOF
       end
 
       if USE_DOCKERCFG && File.exist?(DOCKERCFG)
