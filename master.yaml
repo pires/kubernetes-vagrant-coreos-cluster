@@ -72,16 +72,13 @@ coreos:
         Requires=network-online.target kube-certs.service
         After=network-online.target kube-certs.service
         ConditionPathExists=/srv/kubernetes
-        ConditionPathExists=!/opt/bin/kube-apiserver
-        ConditionPathExists=!/opt/bin/kube-controller-manager
-        ConditionPathExists=!/opt/bin/kube-scheduler
         [Service]
         Type=oneshot
         EnvironmentFile=/etc/environment
         ExecStart=-/usr/bin/mkdir -p /opt/bin
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-apiserver
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-controller-manager
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-scheduler
+        ExecStart=/usr/bin/wget -nc -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-apiserver
+        ExecStart=/usr/bin/wget -nc -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-controller-manager
+        ExecStart=/usr/bin/wget -nc -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-scheduler
         ExecStart=/usr/bin/chmod +x /opt/bin/kube-apiserver
         ExecStart=/usr/bin/chmod +x /opt/bin/kube-controller-manager
         ExecStart=/usr/bin/chmod +x /opt/bin/kube-scheduler
