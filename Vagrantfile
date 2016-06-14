@@ -128,7 +128,8 @@ if SYNC_FOLDERS
   MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
 end
 
-KUBERNETES_BINARIES_MOUNT_NAME = ENV['KUBERNETES_BINARIES_MOUNT_NAME'] || 'kubernetes-binaries'
+KUBERNETES_BINARIES_MOUNT_SOURCE = ENV['KUBERNETES_BINARIES_MOUNT_SOURCE'] || File.expand_path("../binaries", __FILE__)
+KUBERNETES_BINARIES_MOUNT_DEST = ENV['KUBERNETES_BINARIES_MOUNT_DEST'] || '/mnt/kubernetes'
 REQUIRED_BINARIES_FOR_MASTER = ['kube-apiserver', 'kube-controller-manager', 'kube-scheduler']
 REQUIRED_BINARIES_FOR_NODES = ['kube-proxy', 'kubelet']
 
@@ -460,7 +461,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       kHost.vm.network :private_network, ip: "#{BASE_IP_ADDR}.#{i+100}"
       # you can override this in synced_folders.yaml
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
-      kubernetes_binaries_dir = ''
+
       if SYNC_FOLDERS
         begin
           MOUNT_POINTS.each do |mount|
@@ -483,9 +484,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                   disabled: disabled,
                   mount_options: ["#{mount_options}"],
                   nfs: nfs
-                if mount['name'] == KUBERNETES_BINARIES_MOUNT_NAME
-                  kubernetes_binaries_dir = mount['destination']
-                end
               end
             end
           end
@@ -532,15 +530,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
 
-        # Copy Kubernetes installation binaries via synced folders if KUBERNETES_BINARIES_MOUNT_NAME is found in synced_folders.yaml
-        unless kubernetes_binaries_dir == ''
-          binary_file_list = []
-          (vmName == 'master' ? REQUIRED_BINARIES_FOR_MASTER : REQUIRED_BINARIES_FOR_NODES).each do |filename|
-            binary_file_list.push(File.join(kubernetes_binaries_dir, filename))
-          end
+        # Copy Kubernetes installation binaries from KUBERNETES_BINARIES_MOUNT_SOURCE if source exists
+        if File.exist?(File.expand_path("#{KUBERNETES_BINARIES_MOUNT_SOURCE}"))
+          kHost.vm.synced_folder "#{KUBERNETES_BINARIES_MOUNT_SOURCE}", "#{KUBERNETES_BINARIES_MOUNT_DEST}",
+                                 id: "kubernetes-binaries",
+                                 disabled: false,
+                                 mount_options: ['nolock,vers=3,udp,noatime'],
+                                 nfs: true
+          binary_file_list = (vmName == 'master' ? REQUIRED_BINARIES_FOR_MASTER : REQUIRED_BINARIES_FOR_NODES)
           kHost.vm.provision :shell, :privileged => true, :args => binary_file_list, inline: <<-EOF
-            for file in "$@"
+            for arg in "$@"
             do
+              file="#{KUBERNETES_BINARIES_MOUNT_DEST}/${arg}"
               [ ! -f $file ] && continue
               file_version=`$file --version`
               if [ "${file_version}" == "Kubernetes v#{KUBERNETES_VERSION}" ]; then
