@@ -44,6 +44,8 @@ if OS.windows?
   required_plugins.push('vagrant-winnfsd')
 end
 
+required_plugins.push('vagrant-timezone')
+
 required_plugins.each do |plugin|
   need_restart = false
   unless Vagrant.has_plugin? plugin
@@ -130,6 +132,9 @@ REQUIRED_BINARIES_FOR_NODES = ['kube-proxy', 'kubelet']
 REQUIRED_BINARIES = REQUIRED_BINARIES_FOR_MASTER + REQUIRED_BINARIES_FOR_NODES
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # always use host timezone in VMs
+  config.timezone.value = :host
+
   # always use Vagrants' insecure key
   config.ssh.insert_key = false
   config.ssh.forward_agent = true
