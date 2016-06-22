@@ -5,6 +5,7 @@ require 'fileutils'
 require 'net/http'
 require 'open-uri'
 require 'json'
+require 'date'
 
 class Module
   def redefine_const(name, value)
@@ -127,6 +128,11 @@ if SYNC_FOLDERS
   MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
 end
 
+KUBERNETES_BINARIES_MOUNT_SOURCE = ENV['KUBERNETES_BINARIES_MOUNT_SOURCE'] || File.expand_path("../binaries", __FILE__)
+KUBERNETES_BINARIES_MOUNT_DEST = ENV['KUBERNETES_BINARIES_MOUNT_DEST'] || '/mnt/kubernetes'
+REQUIRED_BINARIES_FOR_MASTER = ['kube-apiserver', 'kube-controller-manager', 'kube-scheduler']
+REQUIRED_BINARIES_FOR_NODES = ['kube-proxy', 'kubelet']
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use Vagrants' insecure key
   config.ssh.insert_key = false
@@ -217,6 +223,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       # in the master (re: emyl/vagrant-triggers#13)...
       if vmName == "master"
         kHost.trigger.before [:up, :provision] do
+          info "#{Time.now}: setting up Kubernetes master..."
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
           sedInplaceArg = OS.mac? ? " ''" : ""
           system "cp setup.tmpl temp/setup"
@@ -267,6 +274,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               sleep 10
             end
             break if res.is_a? Net::HTTPSuccess or j >= BOX_TIMEOUT_COUNT
+          end
+          if res.is_a? Net::HTTPSuccess
+            info "#{Time.now}: successfully deployed #{vmName}"
+          else
+            info "#{Time.now}: failed to deploy #{vmName} within timeout count of #{BOX_TIMEOUT_COUNT}"
           end
 
           info "Installing kubectl for the Kubernetes version we just bootstrapped..."
@@ -378,6 +390,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               sleep 10
             end
             break if hasResponse or j >= BOX_TIMEOUT_COUNT
+          end
+          if hasResponse
+            info "#{Time.now}: successfully deployed #{vmName}"
+          else
+            info "#{Time.now}: failed to deploy #{vmName} within timeout count of #{BOX_TIMEOUT_COUNT}"
           end
         end
       end
@@ -512,6 +529,27 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
+
+        # Copy Kubernetes installation binaries from KUBERNETES_BINARIES_MOUNT_SOURCE if source exists
+        if File.exist?(File.expand_path("#{KUBERNETES_BINARIES_MOUNT_SOURCE}"))
+          kHost.vm.synced_folder "#{KUBERNETES_BINARIES_MOUNT_SOURCE}", "#{KUBERNETES_BINARIES_MOUNT_DEST}",
+                                 id: "kubernetes-binaries",
+                                 disabled: false,
+                                 mount_options: ['nolock,vers=3,udp,noatime'],
+                                 nfs: true
+          binary_file_list = (vmName == 'master' ? REQUIRED_BINARIES_FOR_MASTER : REQUIRED_BINARIES_FOR_NODES)
+          kHost.vm.provision :shell, :privileged => true, :args => binary_file_list, inline: <<-EOF
+            for arg in "$@"
+            do
+              file="#{KUBERNETES_BINARIES_MOUNT_DEST}/${arg}"
+              [ ! -f $file ] && continue
+              file_version=`$file --version`
+              if [ "${file_version}" == "Kubernetes v#{KUBERNETES_VERSION}" ]; then
+                (cp -n $file /opt/bin && echo "Copied Kubernetes binary file from synced folders: ${file}") || true
+              fi
+            done
+          EOF
+        end
       end
     end
   end
