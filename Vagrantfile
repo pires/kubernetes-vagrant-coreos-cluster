@@ -244,7 +244,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             setupFileData = setupFileData.gsub("__NO_PROXY__", NO_PROXY);
           else
             # remove lines that start with __PROXY_LINE__
-            setupFileData = setupFileData.gsub(/^\s*__PROXY_LINE__.*$/, "");
+            setupFileData = setupFileData.gsub(/^\s*__PROXY_LINE__.*$\n/, "");
           end
 
           # write new setup data to setup file
