@@ -229,72 +229,91 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.trigger.before [:up, :provision] do
           info "#{Time.now}: setting up Kubernetes master..."
           info "Setting Kubernetes version #{KUBERNETES_VERSION}"
-          sedInplaceArg = OS.mac? ? " ''" : ""
-          system "cp setup.tmpl temp/setup"
-          system "sed -e 's|__KUBERNETES_VERSION__|#{KUBERNETES_VERSION}|g' -i#{sedInplaceArg} ./temp/setup"
-          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/setup"
+
+          # create setup file
+          setupFile = "#{__dir__}/temp/setup"
+
+          # find and replace kubernetes version and master IP in setup file
+          setupFileData = File.read("setup.tmpl")
+          setupFileData = setupFileData.gsub("__KUBERNETES_VERSION__", KUBERNETES_VERSION);
+          setupFileData = setupFileData.gsub("__MASTER_IP__", MASTER_IP);
+
           if enable_proxy
-            system "sed -e 's|__PROXY_LINE__||g' -i#{sedInplaceArg} ./temp/setup"
-            system "sed -e 's|__NO_PROXY__|#{NO_PROXY}|g' -i#{sedInplaceArg} ./temp/setup"
+            # remove __PROXY_LINE__ flag and set __NO_PROXY__
+            setupFileData = setupFileData.gsub("__PROXY_LINE__", "");
+            setupFileData = setupFileData.gsub("__NO_PROXY__", NO_PROXY);
           else
-            system "sed -e '/__PROXY_LINE__/d' -i#{sedInplaceArg} ./temp/setup"
+            # remove lines that start with __PROXY_LINE__
+            setupFileData = setupFileData.gsub(/^\s*__PROXY_LINE__.*$\n/, "");
           end
+
+          # write new setup data to setup file
+          File.open(setupFile, "wb") do |f|
+            f.write(setupFileData)
+          end
+
+          # give setup file executable permissions
           system "chmod +x temp/setup"
 
           info "Downloading Kubernetes binaries if version mismatch or binaries not present.."
           REQUIRED_BINARIES.each do |filename|
-          system("
-            to_download=0
-            file='#{binaries_host_dir}/#{filename}'
-            echo \"Checking for ${file} with version v#{KUBERNETES_VERSION}..\"
+            toDownload = 0
+            file="#{binaries_host_dir}/#{filename}"
 
-            if [ -f \"#{version_file}\" ]; then
-              LAST_VERSION=`cat \"#{version_file}\"`
-            fi
-            if [ \"$LAST_VERSION\" != \"#{KUBERNETES_VERSION}\" ]; then
-              echo \"Versions mismatch [current: $LAST_VERSION, desired: #{KUBERNETES_VERSION}]\"
-              to_download=1
+            info "Checking for #{file} with version v#{KUBERNETES_VERSION}.."
+            if File.exist?("#{version_file}")
+              lastVersion = File.read("#{version_file}")
+            end
+
+            if lastVersion != KUBERNETES_VERSION
+              info "Versions mismatch [current: #{lastVersion}, desired: #{KUBERNETES_VERSION}]"
+              toDownload = 1
             else
-              echo \"Versions match, checking if binary exist..\"
-              if [ ! -f $file ]; then
-                to_download=1
-              fi
-            fi
+              info "Versions match, checking if binary exists..."
+              if !File.exist?(file)
+                toDownload = 1
+              end
+            end
 
-            if [ $to_download == 1 ]; then
-              url=\"https://storage.googleapis.com/kubernetes-release/release/v#{KUBERNETES_VERSION}/bin/linux/amd64/#{filename}\"
-              echo \"Trying to download ${url}..\"
-              (curl -s -k -L -o $file \"$url\") || true
-            fi
-          ")
-          end
-          # only write current version after all files have been downloaded
-          system("echo #{KUBERNETES_VERSION} > #{version_file}")
-
-          info "Configuring Kubernetes cluster DNS..."
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
-          system "cp plugins/dns/dns-controller.yaml.tmpl temp/dns-controller.yaml"
-          system "sed -e 's|__MASTER_IP__|#{MASTER_IP}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
-          system "sed -e 's|__DNS_DOMAIN__|#{DNS_DOMAIN}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
-          system "sed -e 's|__DNS_UPSTREAM_SERVERS__|#{DNS_UPSTREAM_SERVERS}|g' -i#{sedInplaceArg} ./temp/dns-controller.yaml"
-
-          if OS.windows?
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
-
-            if USE_KUBE_UI
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-service.yaml"), :destination => "/home/core/dashboard-service.yaml"
+            if toDownload == 1
+              urlDomain = "storage.googleapis.com"
+              urlResource = "/kubernetes-release/release/v#{KUBERNETES_VERSION}/bin/linux/amd64/#{filename}"
+              info "Trying to download #{urlDomain}#{urlResource}..."
+              Net::HTTP.start(urlDomain) do |http|
+                  resp = http.get(urlResource)
+                  open(file, "wb") do |f|
+                    f.write(resp.body)
+                  end
+              end
+              info "Download complete."
             end
           end
-      end
+
+          # only write current version after all files have been downloaded
+          open("#{version_file}", "wb") do |f|
+            f.write("#{KUBERNETES_VERSION}")
+          end
+
+          # create dns-controller.yaml file
+          dnsControllerFile = "#{__dir__}/temp/dns-controller.yaml"
+          dnsControllerData = File.read("#{__dir__}/plugins/dns/dns-controller.yaml.tmpl")
+
+          dnsControllerData = dnsControllerData.gsub("__MASTER_IP__", MASTER_IP);
+          dnsControllerData = dnsControllerData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
+          dnsControllerData = dnsControllerData.gsub("__DNS_UPSTREAM_SERVERS__", DNS_UPSTREAM_SERVERS);
+
+          # write new setup data to setup file
+          File.open(dnsControllerFile, "wb") do |f|
+            f.write(dnsControllerData)
+          end
+        end
 
         kHost.trigger.after [:up, :resume] do
-          info "Sanitizing stuff..."
-          system "ssh-add ~/.vagrant.d/insecure_private_key"
-          system "rm -rf ~/.fleetctl/known_hosts"
+          unless OS.windows?
+            info "Sanitizing stuff..."
+            system "ssh-add ~/.vagrant.d/insecure_private_key"
+            system "rm -rf ~/.fleetctl/known_hosts"
+          end
         end
 
         kHost.trigger.after [:up] do
@@ -324,14 +343,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # set cluster
           if OS.windows?
-              run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
-              run_remote "/opt/bin/kubectl config set-context local --cluster=local --namespace=default"
-              run_remote "/opt/bin/kubectl config use-context local"
-            else
-              system "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
-              system "kubectl config set-context local --cluster=local --namespace=default"
-              system "kubectl config use-context local"
-            end
+            run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
+            run_remote "/opt/bin/kubectl config set-context local --cluster=local --namespace=default"
+            run_remote "/opt/bin/kubectl config use-context local"
+          else
+            system "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
+            system "kubectl config set-context local --cluster=local --namespace=default"
+            system "kubectl config use-context local"
+          end
 
           info "Configuring Kubernetes DNS..."
           res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-dns'
@@ -407,6 +426,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
 
         end
+
+        # copy setup files to master vm if host is windows
+        if OS.windows?
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
+
+          if USE_KUBE_UI
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-service.yaml"), :destination => "/home/core/dashboard-service.yaml"
+          end
+        end
+
+        # clean temp directory after master is destroyed
+        kHost.trigger.after [:destroy] do
+          FileUtils.rm_rf(Dir.glob("#{__dir__}/temp/*"))
+        end
       end
 
       if vmName == "node-%02d" % (i - 1)
@@ -437,12 +474,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         if REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT
           run_remote "sudo rm -f /var/lib/coreos-vagrant/vagrantfile-user-data"
         end
-      end
-
-      kHost.trigger.before [:destroy] do
-        system <<-EOT.prepend("\n\n") + "\n"
-          rm -f temp/*
-        EOT
       end
 
       if SERIAL_LOGGING
