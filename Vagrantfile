@@ -248,7 +248,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
 
           # write new setup data to setup file
-          File.open(setupFile, "w") do |f|
+          File.open(setupFile, "wb") do |f|
             f.write(setupFileData)
           end
 
@@ -276,7 +276,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
 
             if toDownload == 1
-              urlDomain = "https://storage.googleapis.com"
+              urlDomain = "storage.googleapis.com"
               urlResource = "/kubernetes-release/release/v#{KUBERNETES_VERSION}/bin/linux/amd64/#{filename}"
               info "Trying to download #{urlDomain}#{urlResource}..."
               Net::HTTP.start(urlDomain) do |http|
@@ -294,9 +294,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             f.write("#{KUBERNETES_VERSION}")
           end
 
-          info "Configuring Kubernetes cluster DNS..."
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
-
           # create dns-controller.yaml file
           dnsControllerFile = "#{__dir__}/temp/dns-controller.yaml"
           dnsControllerData = File.read("#{__dir__}/plugins/dns/dns-controller.yaml.tmpl")
@@ -306,22 +303,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           dnsControllerData = dnsControllerData.gsub("__DNS_UPSTREAM_SERVERS__", DNS_UPSTREAM_SERVERS);
 
           # write new setup data to setup file
-          File.open(dnsControllerFile, "w") do |f|
+          File.open(dnsControllerFile, "wb") do |f|
             f.write(dnsControllerData)
           end
-
-          if OS.windows?
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
-
-            if USE_KUBE_UI
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-service.yaml"), :destination => "/home/core/dashboard-service.yaml"
-            end
-          end
-      end
+        end
 
         kHost.trigger.after [:up, :resume] do
           unless OS.windows?
@@ -441,6 +426,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
 
         end
+
+        # copy setup files to master vm if host is windows
+        if OS.windows?
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
+
+          if USE_KUBE_UI
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-service.yaml"), :destination => "/home/core/dashboard-service.yaml"
+          end
+        end
+
+        # clean temp directory after master is destroyed
+        kHost.trigger.after [:destroy] do
+          FileUtils.rm_rf(Dir.glob("#{__dir__}/temp/*"))
+        end
       end
 
       if vmName == "node-%02d" % (i - 1)
@@ -471,10 +474,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         if REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT
           run_remote "sudo rm -f /var/lib/coreos-vagrant/vagrantfile-user-data"
         end
-      end
-
-      kHost.trigger.before [:destroy] do
-        FileUtils.rm_rf(Dir.glob("#{__dir__}/temp/*"))
       end
 
       if SERIAL_LOGGING
