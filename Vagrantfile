@@ -360,10 +360,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
           if not res.is_a? Net::HTTPSuccess
             if OS.windows?
-              run_remote "/opt/bin/kubectl create -f /home/core/kube-system.yaml"
               run_remote "/opt/bin/kubectl create -f /home/core/dns-controller.yaml"
             else
-              system "kubectl create -f kube-system.yaml"
               system "kubectl create -f temp/dns-controller.yaml"
             end
           end
@@ -383,18 +381,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           if USE_KUBE_UI
             info "Configuring Kubernetes dashboard..."
-            res, uri.path = nil, '/api/v1/namespaces/kube-system'
-            begin
-              res = Net::HTTP.get_response(uri)
-            rescue
-            end
-            if not res.is_a? Net::HTTPSuccess
-              if OS.windows?
-                run_remote "/opt/bin/kubectl create -f /home/core/kube-system.yaml"
-              else
-                system "kubectl create -f kube-system.yaml"
-              end
-            end
 
             res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kubernetes-dashboard'
             begin
@@ -432,7 +418,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "kube-system.yaml"), :destination => "/home/core/kube-system.yaml"
 
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
