@@ -89,9 +89,10 @@ coreos:
         Requires=network-online.target
         After=network-online.target
         [Service]
-        ExecStartPre=/usr/bin/mkdir -p /opt/kubernetes/manifests/
+        Environment=KUBELET_VERSION=__RELEASE___coreos.0
         ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
-        ExecStart=/opt/bin/kubelet \
+        ExecStartPre=/usr/bin/mkdir -p /opt/kubernetes/manifests/
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
           --address=0.0.0.0 \
           --port=10250 \
           --hostname_override=$public_ipv4 \

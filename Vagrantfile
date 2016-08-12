@@ -128,7 +128,7 @@ Object.redefine_const(:CLOUD_PROVIDER,
 MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
 
 REQUIRED_BINARIES_FOR_MASTER = ['kube-apiserver', 'kube-controller-manager', 'kube-scheduler']
-REQUIRED_BINARIES_FOR_NODES = ['kube-proxy', 'kubelet']
+REQUIRED_BINARIES_FOR_NODES = ['kube-proxy']
 REQUIRED_BINARIES = REQUIRED_BINARIES_FOR_MASTER + REQUIRED_BINARIES_FOR_NODES
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
