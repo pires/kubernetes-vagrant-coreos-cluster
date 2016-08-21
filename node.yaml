@@ -78,7 +78,8 @@ coreos:
         After=network-online.target
         [Service]
         ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
-        ExecStart=/opt/bin/kube-proxy \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-proxy
+        ExecStart=/vagrant/binaries/kube-proxy \
           --master=__MASTER_IP__:8080 \
           --proxy-mode=iptables \
           --logtostderr=true

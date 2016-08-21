@@ -540,17 +540,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       rescue
       end
 
-      # copying Kubernetes binaries to VM
-      (vmName == 'master' ? REQUIRED_BINARIES_FOR_MASTER : REQUIRED_BINARIES_FOR_NODES).each do |filename|
-        file="#{binaries_host_dir}/#{filename}"
-        kHost.vm.provision :shell, :privileged => true, inline: <<-EOF
-          echo "Copying host:#{file} to vm:/opt/bin/#{filename}.."
-          mkdir -p /opt/bin
-          cp "/vagrant/#{binaries_host_dir}/#{filename}" "/opt/bin/#{filename}"
-          chmod +x "/opt/bin/#{filename}"
-        EOF
-      end
-
       if USE_DOCKERCFG && File.exist?(DOCKERCFG)
         kHost.vm.provision :file, run: "always",
          :source => "#{DOCKERCFG}", :destination => "/home/core/.dockercfg"

@@ -109,7 +109,8 @@ coreos:
         After=etcd2.service flanneld.service kube-certs.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
-        ExecStart=/opt/bin/kube-apiserver \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-apiserver 
+        ExecStart=/vagrant/binaries/kube-apiserver \
           --bind-address=0.0.0.0 \
           --etcd-servers=http://$private_ipv4:2379 \
           --allow-privileged=true \
@@ -137,7 +138,8 @@ coreos:
         After=kube-apiserver.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
-        ExecStart=/opt/bin/kube-controller-manager \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-controller-manager
+        ExecStart=/vagrant/binaries/kube-controller-manager \
           --master=$private_ipv4:8080 \
           --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
           --root-ca-file=/etc/kubernetes/ssl/ca.pem \
@@ -156,7 +158,8 @@ coreos:
         After=kube-apiserver.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
-        ExecStart=/opt/bin/kube-scheduler \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-scheduler
+        ExecStart=/vagrant/binaries/kube-scheduler \
           --master=$private_ipv4:8080
         Restart=always
         RestartSec=10
