@@ -80,6 +80,7 @@ coreos:
         ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
         ExecStart=/opt/bin/kube-proxy \
           --master=__MASTER_IP__:8080 \
+          --proxy-mode=iptables \
           --logtostderr=true
         Restart=always
         RestartSec=10
