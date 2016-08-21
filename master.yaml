@@ -86,34 +86,45 @@ coreos:
         ExecStart=/tmp/make-certs.sh $public_ipv4 IP:$public_ipv4,IP:10.100.0.1,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.__DNS_DOMAIN__
         Type=oneshot
         RemainAfterExit=true
+    - name: hyperkube-image-export.service
+      command: start
+      content: |
+        [Unit]
+        Description=Export Hyperkube rkt image for usage in worker nodes
+        Requires=network-online.target
+        After=network-online.target
+        ConditionPathExists=!/vagrant/binaries/hyperkube___RELEASE__.aci
+        [Service]
+        ExecStartPre=/usr/bin/rkt --trust-keys-from-https fetch quay.io/coreos/hyperkube:__RELEASE___coreos.0
+        ExecStart=/usr/bin/rkt image export quay.io/coreos/hyperkube:__RELEASE___coreos.0 /vagrant/binaries/hyperkube___RELEASE__.aci
+        Type=oneshot
+        RemainAfterExit=true
     - name: kube-apiserver.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=etcd2.service fleet.service docker.service flanneld.service
-        After=etcd2.service fleet.service docker.service flanneld.service
+        Requires=etcd2.service flanneld.service kube-certs.service
+        After=etcd2.service flanneld.service kube-certs.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
         ExecStart=/opt/bin/kube-apiserver \
-          --admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
-          --service_account_lookup=false \
-          --allow_privileged=true \
-          --insecure_bind_address=0.0.0.0 \
-          --insecure_port=8080 \
-          --kubelet_https=true \
-          --secure_port=6443 \
+          --bind-address=0.0.0.0 \
+          --etcd-servers=http://$private_ipv4:2379 \
+          --allow-privileged=true \
           --service-cluster-ip-range=10.100.0.0/16 \
-          --etcd_servers=http://$private_ipv4:2379 \
-          --bind-address=$public_ipv4 \
           --cloud_provider=__CLOUDPROVIDER__ \
-          --logtostderr=true \
-          --runtime_config=api/v1
+          --secure-port=443 \
+          --insecure_bind_address=0.0.0.0 \
+          --advertise-address=$public_ipv4 \
+          --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
           --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem \
           --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
           --client-ca-file=/etc/kubernetes/ssl/ca.pem \
           --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+          --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true \
+          --logtostderr=true
         Restart=always
         RestartSec=10
     - name: kube-controller-manager.service

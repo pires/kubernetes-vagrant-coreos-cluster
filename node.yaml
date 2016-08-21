@@ -91,10 +91,11 @@ coreos:
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
         Requires=network-online.target
         After=network-online.target
+        ConditionPathExists=/vagrant/binaries/hyperkube___RELEASE__.aci
         [Service]
-        Environment=KUBELET_VERSION=__RELEASE___coreos.0
-        ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
         ExecStartPre=/usr/bin/mkdir -p /opt/kubernetes/manifests/
+        Environment=KUBELET_VERSION=__RELEASE___coreos.0
+        ExecStartPre=/usr/bin/rkt fetch --insecure-options=image /vagrant/binaries/hyperkube___RELEASE__.aci
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
           --address=0.0.0.0 \
           --port=10250 \
@@ -104,11 +105,8 @@ coreos:
           --allow_privileged=true \
           --cluster_dns=10.100.0.10 \
           --cluster_domain=__DNS_DOMAIN__ \
-          --logtostderr=true \
           --config=/opt/kubernetes/manifests/ \
-          --cadvisor_port=4194 \
-          --healthz_bind_address=0.0.0.0 \
-          --healthz_port=10248
+          --logtostderr=true
         Restart=always
         RestartSec=10
         WorkingDirectory=/root/
