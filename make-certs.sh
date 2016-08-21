@@ -20,7 +20,10 @@ set -o pipefail
 
 cert_ip=$1
 extra_sans=${2:-}
-cert_dir=/srv/kubernetes
+cert_dir=/etc/kubernetes/ssl
+pem_ca=$cert_dir/ca.pem
+pem_server=$cert_dir/apiserver.pem
+pem_server_key=$cert_dir/apiserver-key.pem
 cert_group=kube-cert
 
 mkdir -p "$cert_dir"
@@ -55,19 +58,19 @@ cd easy-rsa-master/easyrsa3
 ./easyrsa --batch "--req-cn=$cert_ip@`date +%s`" build-ca nopass > /dev/null 2>&1
 if [ $use_cn = "true" ]; then
     ./easyrsa build-server-full $cert_ip nopass > /dev/null 2>&1
-    cp -p pki/issued/$cert_ip.crt "${cert_dir}/server.cert" > /dev/null 2>&1
-    cp -p pki/private/$cert_ip.key "${cert_dir}/server.key" > /dev/null 2>&1
+    cp -p pki/issued/$cert_ip.crt $pem_server > /dev/null 2>&1
+    cp -p pki/private/$cert_ip.key $pem_server_key > /dev/null 2>&1
 else
     ./easyrsa --subject-alt-name="${sans}" build-server-full kubernetes-master nopass > /dev/null 2>&1
-    cp -p pki/issued/kubernetes-master.crt "${cert_dir}/server.cert" > /dev/null 2>&1
-    cp -p pki/private/kubernetes-master.key "${cert_dir}/server.key" > /dev/null 2>&1
+    cp -p pki/issued/kubernetes-master.crt $pem_server > /dev/null 2>&1
+    cp -p pki/private/kubernetes-master.key $pem_server_key > /dev/null 2>&1
 fi
 ./easyrsa build-client-full kubecfg nopass > /dev/null 2>&1
-cp -p pki/ca.crt "${cert_dir}/ca.crt"
+cp -p pki/ca.crt $pem_ca
 cp -p pki/issued/kubecfg.crt "${cert_dir}/kubecfg.crt"
 cp -p pki/private/kubecfg.key "${cert_dir}/kubecfg.key"
+
 # Make server certs accessible to apiserver.
-echo 3
-chgrp $cert_group "${cert_dir}/server.key" "${cert_dir}/server.cert" "${cert_dir}/ca.crt"
-chmod 660 "${cert_dir}/server.key" "${cert_dir}/server.cert" "${cert_dir}/ca.crt"
-echo 4
+chgrp $cert_group $pem_server_key $pem_server $pem_ca
+chmod 600 $pem_server_key
+chmod 660 $pem_server $pem_ca

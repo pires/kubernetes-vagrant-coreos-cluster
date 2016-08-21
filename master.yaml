@@ -97,11 +97,7 @@ coreos:
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
         ExecStart=/opt/bin/kube-apiserver \
-          --client-ca-file=/srv/kubernetes/ca.crt \
-          --tls-cert-file=/srv/kubernetes/server.cert \
-          --tls-private-key-file=/srv/kubernetes/server.key \
           --admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
-          --service_account_key_file=/srv/kubernetes/server.key \
           --service_account_lookup=false \
           --allow_privileged=true \
           --insecure_bind_address=0.0.0.0 \
@@ -114,6 +110,10 @@ coreos:
           --cloud_provider=__CLOUDPROVIDER__ \
           --logtostderr=true \
           --runtime_config=api/v1
+          --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem \
+          --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+          --client-ca-file=/etc/kubernetes/ssl/ca.pem \
+          --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
         Restart=always
         RestartSec=10
     - name: kube-controller-manager.service
@@ -127,9 +127,9 @@ coreos:
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
         ExecStart=/opt/bin/kube-controller-manager \
-          --root-ca-file=/srv/kubernetes/ca.crt \
-          --service-account-private-key-file=/srv/kubernetes/server.key \
           --master=$private_ipv4:8080 \
+          --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+          --root-ca-file=/etc/kubernetes/ssl/ca.pem \
           --cloud_provider=__CLOUDPROVIDER__ \
           --pod_eviction_timeout=30s \
           --logtostderr=true
