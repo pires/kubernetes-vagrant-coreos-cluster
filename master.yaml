@@ -39,8 +39,6 @@ coreos:
     - name: rpc-statd.service
       enable: true
       command: start
-    - name: fleet.service
-      command: start
     - name: flanneld.service
       command: start
       drop-ins:
