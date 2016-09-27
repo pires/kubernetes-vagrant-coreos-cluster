@@ -1,14 +1,14 @@
 # kubernetes-vagrant-coreos-cluster
 Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
-cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
+cluster setup with **[Vagrant 1.8,5+](https://www.vagrantup.com)** and
 **[CoreOS](https://coreos.com)**.
 
 ####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
- * **[Vagrant](https://www.vagrantup.com)**
- * a supported Vagrant hypervisor
+ * **[Vagrant 1.8,5+](https://www.vagrantup.com)**
+ * a supported Vagrant hypervisor:
  	* **[Virtualbox](https://www.virtualbox.org)** (the default)
  	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
  	* **[VMware Fusion](http://www.vmware.com/products/fusion)** or **[VMware Workstation](http://www.vmware.com/products/workstation)**
@@ -18,7 +18,6 @@ cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
 On **MacOS X** (and assuming you have [homebrew](http://brew.sh) already installed) run
 
 ```
-brew update
 brew install wget
 ```
 
