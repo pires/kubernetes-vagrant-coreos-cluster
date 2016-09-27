@@ -279,7 +279,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               urlDomain = "storage.googleapis.com"
               urlResource = "/kubernetes-release/release/v#{KUBERNETES_VERSION}/bin/linux/amd64/#{filename}"
               info "Trying to download #{urlDomain}#{urlResource}..."
-              Net::HTTP.start(urlDomain) do |http|
+              Net::HTTP.new(urlDomain).start do |http|
                   resp = http.get(urlResource)
                   open(file, "wb") do |f|
                     f.write(resp.body)
