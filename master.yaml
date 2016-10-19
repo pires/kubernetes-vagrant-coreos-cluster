@@ -163,6 +163,23 @@ coreos:
           --master=$private_ipv4:8080
         Restart=always
         RestartSec=10
+    - name: kube-proxy.service
+      command: start
+      content: |
+        [Unit]
+        Description=Kubernetes Proxy
+        Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        Requires=kube-apiserver.service
+        After=kube-apiserver.service
+        [Service]
+        ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-proxy
+        ExecStart=/vagrant/binaries/kube-proxy \
+          --master=$private_ipv4:8080 \
+          --proxy-mode=iptables \
+          --logtostderr=true
+        Restart=always
+        RestartSec=10
   update:
     group: __CHANNEL__
     reboot-strategy: off
