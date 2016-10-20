@@ -108,13 +108,13 @@ Most aspects of your cluster setup can be customized with environment variables.
    Defaults to **1024** (in MB)
  - **MASTER_CPUS** sets the number of vCPUs to be used by the master VM.
 
-   Defaults to **1**.
+   Defaults to **2**.
  - **NODE_MEM** sets the worker nodes VM memory.
 
    Defaults to **2048** (in MB)
  - **NODE_CPUS** sets the number of vCPUs to be used by node VMs.
 
-   Defaults to **1**.
+   Defaults to **2**.
  - **DOCKERCFG** sets the location of your private docker repositories (and keys) configuration. However, this is only usable if you set **USE_DOCKERCFG=true**.
 
    Defaults to "**~/.dockercfg**".
@@ -134,16 +134,16 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to `false`.
 
-So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would run:
+So, in order to start, say, a Kubernetes cluster with 3 worker nodes, 4GB of RAM and 4 vCPUs per node one just would run:
 
 ```
-NODE_MEM=4096 NODE_CPUS=2 NODES=3 vagrant up
+NODE_MEM=4096 NODE_CPUS=4 NODES=3 vagrant up
 ```
 
 or with Kubernetes UI:
 
 ```
-NODE_MEM=4096 NODE_CPUS=2 NODES=3 USE_KUBE_UI=true vagrant up
+NODE_MEM=4096 NODE_CPUS=4 NODES=3 USE_KUBE_UI=true vagrant up
 ```
 
 **Please do note** that if you were using non default settings to startup your
