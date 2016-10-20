@@ -115,7 +115,6 @@ coreos:
           --etcd-servers=http://$private_ipv4:2379 \
           --allow-privileged=true \
           --service-cluster-ip-range=10.100.0.0/16 \
-          --cloud_provider=__CLOUDPROVIDER__ \
           --secure-port=443 \
           --insecure_bind_address=0.0.0.0 \
           --advertise-address=$public_ipv4 \
@@ -143,7 +142,6 @@ coreos:
           --master=$private_ipv4:8080 \
           --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
           --root-ca-file=/etc/kubernetes/ssl/ca.pem \
-          --cloud_provider=__CLOUDPROVIDER__ \
           --pod_eviction_timeout=30s \
           --logtostderr=true
         Restart=always

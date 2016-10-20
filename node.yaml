@@ -103,7 +103,6 @@ coreos:
           --port=10250 \
           --hostname_override=$public_ipv4 \
           --api_servers=__MASTER_IP__:8080 \
-          --cloud_provider=__CLOUDPROVIDER__ \
           --allow_privileged=true \
           --cluster_dns=10.100.0.10 \
           --cluster_domain=__DNS_DOMAIN__ \

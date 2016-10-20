@@ -118,12 +118,6 @@ end
 REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT'].to_s.downcase == 'true')
 # if this is set true, remember to use --provision when executing vagrant up / reload
 
-CLOUD_PROVIDER = ENV['CLOUD_PROVIDER'].to_s.downcase
-validCloudProviders = [ 'gce', 'gke', 'aws', 'azure', 'vagrant', 'vsphere',
-  'libvirt-coreos', 'juju' ]
-Object.redefine_const(:CLOUD_PROVIDER,
-  '') unless validCloudProviders.include?(CLOUD_PROVIDER)
-
 # Read YAML file with mountpoint details
 MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
 
@@ -572,7 +566,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
-          sed -i"*" "s,__CLOUDPROVIDER__,#{CLOUD_PROVIDER},g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data

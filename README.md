@@ -130,10 +130,6 @@ Most aspects of your cluster setup can be customized with environment variables.
    Defaults to `1.4.4`.
    Versions prior to `1.3.0` **won't work** with current cloud-config files.
 
- - **CLOUD_PROVIDER** defines the specific cloud provider being used. This is useful, for instance, if you're relying on kubernetes to set load-balancers for your services.
-
-   [Possible values are `gce`, `gke`, `aws`, `azure`, `vagrant`, `vsphere`, `libvirt-coreos` and `juju`](https://github.com/GoogleCloudPlatform/kubernetes/blob/master/cluster/kube-env.sh#L17). ~~Defaults to `vagrant`,~~ because of https://github.com/GoogleCloudPlatform/kubernetes/issues/9049.
-
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
 
    Defaults to `false`.
