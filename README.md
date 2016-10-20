@@ -28,8 +28,8 @@ brew install wget
 
 ## Deploy Kubernetes
 
-Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_ and, by default, a couple VMs with everything needed to become Kubernetes minions.
-You can change the number of minions and/or the Kubernetes version by setting environment variables **NODES** and **KUBERNETES_VERSION**, respectively. [You can find more details below](#customization).
+Current ```Vagrantfile``` will bootstrap one VM with everything needed to become a Kubernetes _master_ and, by default, a couple VMs with everything needed to become Kubernetes worker nodes.
+You can change the number of worker nodes and/or the Kubernetes version by setting environment variables **NODES** and **KUBERNETES_VERSION**, respectively. [You can find more details below](#customization).
 
 ```
 vagrant up
@@ -57,7 +57,7 @@ vagrant destroy
 If you've set `NODES` or any other variable when deploying, please make sure you set it in `vagrant destroy` call above, like:
 
 ```
-NODES=3 vagrant destroy
+NODES=3 vagrant destroy -f
 ```
 
 ## Notes about hypervisors
@@ -88,7 +88,7 @@ If you want to use Docker private repositories look for **DOCKERCFG** bellow.
 ### Environment variables
 Most aspects of your cluster setup can be customized with environment variables. Right now the available ones are:
 
- - **NODES** sets the number of nodes (minions).
+ - **NODES** sets the number of nodes (workers).
 
    Defaults to **2**.
  - **CHANNEL** sets the default CoreOS channel to be used in the VMs.
@@ -180,10 +180,10 @@ you which to mount the allowed syntax is...
 vagrant up
 ```
 
-This will start one `master` and two `minion` nodes, download Kubernetes binaries start all needed services.
+This will start one `master` and two `worker` nodes, download Kubernetes binaries start all needed services.
 A Docker mirror cache will be provisioned in the `master`, to speed up container provisioning. This can take some time depending on your Internet connection speed.
 
-Please do note that, at any time, you can change the number of `minions` by setting the `NODES` value in subsequent `vagrant up` invocations.
+Please do note that, at any time, you can change the number of `worker` nodes by setting the `NODES` value in subsequent `vagrant up` invocations.
 
 ### Usage
 
