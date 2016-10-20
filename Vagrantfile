@@ -6,6 +6,7 @@ require 'net/http'
 require 'open-uri'
 require 'json'
 require 'date'
+require 'pathname'
 
 class Module
   def redefine_const(name, value)
@@ -62,6 +63,9 @@ Vagrant.require_version ">= 1.8.6"
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 CERTS_SCRIPT = File.join(File.dirname(__FILE__), "make-certs.sh")
+DOCKER2ACI = File.join(File.dirname(__FILE__), "docker2aci")
+
+MANIFESTS_DIR = Pathname.getwd().join("manifests")
 
 USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
 DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
@@ -120,10 +124,6 @@ REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BE
 
 # Read YAML file with mountpoint details
 MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
-
-REQUIRED_BINARIES_FOR_MASTER = ['kube-apiserver', 'kube-controller-manager', 'kube-scheduler']
-REQUIRED_BINARIES_FOR_NODES = ['kube-proxy']
-REQUIRED_BINARIES = REQUIRED_BINARIES_FOR_MASTER + REQUIRED_BINARIES_FOR_NODES
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use host timezone in VMs
@@ -213,9 +213,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         exit
       end
 
-      binaries_host_dir="./binaries"
-      version_file="#{binaries_host_dir}/version"
-
       # vagrant-triggers has no concept of global triggers so to avoid having
       # then to run as many times as the total number of VMs we only call them
       # in the master (re: emyl/vagrant-triggers#13)...
@@ -248,45 +245,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # give setup file executable permissions
           system "chmod +x temp/setup"
-
-          info "Downloading Kubernetes binaries if version mismatch or binaries not present.."
-          REQUIRED_BINARIES.each do |filename|
-            toDownload = 0
-            file="#{binaries_host_dir}/#{filename}"
-
-            info "Checking for #{file} with version v#{KUBERNETES_VERSION}.."
-            if File.exist?("#{version_file}")
-              lastVersion = File.read("#{version_file}").chomp
-            end
-
-            if lastVersion != KUBERNETES_VERSION
-              info "Versions mismatch [current: #{lastVersion}, desired: #{KUBERNETES_VERSION}]"
-              toDownload = 1
-            else
-              info "Versions match, checking if binary exists..."
-              if !File.exist?(file)
-                toDownload = 1
-              end
-            end
-
-            if toDownload == 1
-              urlDomain = "storage.googleapis.com"
-              urlResource = "/kubernetes-release/release/v#{KUBERNETES_VERSION}/bin/linux/amd64/#{filename}"
-              info "Trying to download #{urlDomain}#{urlResource}..."
-              Net::HTTP.new(urlDomain).start do |http|
-                  resp = http.get(urlResource)
-                  open(file, "wb") do |f|
-                    f.write(resp.body)
-                  end
-              end
-              info "Download complete."
-            end
-          end
-
-          # only write current version after all files have been downloaded
-          open("#{version_file}", "wb") do |f|
-            f.write("#{KUBERNETES_VERSION}")
-          end
 
           # create dns-controller.yaml file
           dnsControllerFile = "#{__dir__}/temp/dns-controller.yaml"
@@ -548,6 +506,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provision :file, :source => "#{CERTS_SCRIPT}", :destination => "/tmp/make-certs.sh"
       end
 
+      # Process vagrantfile
       if File.exist?(cfg)
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
         if enable_proxy
@@ -572,6 +531,28 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
+
+      # Process Kubernetes manifests, depending on node type
+      begin
+        if vmName == "master"
+          kHost.vm.provision :shell, run: "always" do |s|
+            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/* /etc/kubernetes/manifests"
+            s.privileged = true
+          end
+        else
+          kHost.vm.provision :shell, run: "always" do |s|
+            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/kube-proxy.yaml /etc/kubernetes/manifests/"
+            s.privileged = true
+          end
+        end
+        kHost.vm.provision :shell, :privileged => true,
+        inline: <<-EOF
+          sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /etc/kubernetes/manifests/*.yaml
+          sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/manifests/*.yaml
+          sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /etc/kubernetes/manifests/*.yaml
+        EOF
+      end
+
     end
   end
 end
