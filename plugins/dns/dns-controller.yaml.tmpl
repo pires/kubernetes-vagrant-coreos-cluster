@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ReplicationController
 metadata:
   name: kube-dns
-  namespace: default
+  namespace: kube-system
   labels:
     k8s-app: kube-dns
     kubernetes.io/cluster-service: "true"
@@ -25,12 +25,17 @@ spec:
             memory: 50Mi
         command:
         - /usr/local/bin/etcd
+        - -data-dir
+        - /var/etcd/data
         - -listen-client-urls
         - http://127.0.0.1:2379,http://127.0.0.1:4001
         - -advertise-client-urls
         - http://127.0.0.1:2379,http://127.0.0.1:4001
         - -initial-cluster-token
         - skydns-etcd
+        volumeMounts:
+        - name: etcd-storage
+          mountPath: /var/etcd/data
       - name: kube2sky
         image: gcr.io/google_containers/kube2sky:1.11
         resources:
@@ -41,7 +46,7 @@ spec:
         # command = "/kube2sky"
         - -domain=__DNS_DOMAIN__
       - name: skydns
-        image: gcr.io/google_containers/skydns:2015-03-11-001
+        image: gcr.io/google_containers/skydns:2015-10-13-8c72f8c
         resources:
           limits:
             cpu: 100m
@@ -60,11 +65,32 @@ spec:
           name: dns-tcp
           protocol: TCP
         livenessProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - nslookup kubernetes.default.svc.__DNS_DOMAIN__ localhost >/dev/null
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
           initialDelaySeconds: 30
           timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 1
+          timeoutSeconds: 5
+      - name: healthz
+        image: gcr.io/google_containers/exechealthz:1.0
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+        args:
+        - -cmd=nslookup kubernetes.default.svc.__DNS_DOMAIN__ localhost >/dev/null
+        - -port=8080
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+      volumes:
+      - name: etcd-storage
+        emptyDir: {}
       dnsPolicy: Default  # Don't use cluster DNS.

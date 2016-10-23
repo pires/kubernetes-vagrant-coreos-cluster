@@ -45,58 +45,43 @@ coreos:
             Requires=etcd2.service
             [Service]
             ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "host-gw"}}'
-    - name: fleet.service
-      command: start
     - name: docker.service
       command: start
       drop-ins:
-        - name: 51-docker-mirror.conf
+        - __PROXY_LINE__name: http-proxy.conf
+          __PROXY_LINE__content: |
+          __PROXY_LINE__[Service]
+          __PROXY_LINE__EnvironmentFile=/etc/environment
+      drop-ins:
+        - name: 40-flannel.conf
           content: |
             [Unit]
-            # making sure that flanneld finished startup, otherwise containers
-            # won't land in flannel's network...
             Requires=flanneld.service
             After=flanneld.service
+        - name: 50-docker-options.conf
+          content: |
             [Service]
-            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=http://__MASTER_IP__:5000"
-            ExecStartPre=/opt/bin/wupiao __MASTER_IP__:5000
-    - __PROXY_LINE__name: http-proxy.conf
-      __PROXY_LINE__content: |
-        __PROXY_LINE__[Service]
-        __PROXY_LINE__EnvironmentFile=/etc/environment
+            Environment='DOCKER_OPTS=__DOCKER_OPTIONS__'
     - name: early-docker.service
       drop-ins:
         - __PROXY_LINE__name: http-proxy.conf
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
-    - name: kube-install.service
-      command: start
-      content: |
-        [Unit]
-        Description=Download/Install Kubernetes
-        Requires=network-online.target
-        After=network-online.target
-        [Service]
-        Type=oneshot
-        EnvironmentFile=/etc/environment
-        ExecStart=-/usr/bin/mkdir -p /opt/bin
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-proxy
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kubelet
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-proxy
-        ExecStart=/usr/bin/chmod +x /opt/bin/kubelet
     - name: kube-proxy.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes Proxy
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=kube-install.service
-        After=kube-install.service
+        Requires=network-online.target
+        After=network-online.target
         [Service]
         ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
-        ExecStart=/opt/bin/kube-proxy \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-proxy
+        ExecStart=/vagrant/binaries/kube-proxy \
           --master=__MASTER_IP__:8080 \
+          --proxy-mode=iptables \
           --logtostderr=true
         Restart=always
         RestartSec=10
@@ -106,12 +91,14 @@ coreos:
         [Unit]
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=kube-install.service
-        After=kube-install.service
+        Requires=network-online.target
+        After=network-online.target
+        ConditionPathExists=/vagrant/binaries/hyperkube___RELEASE__.aci
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /opt/kubernetes/manifests/
-        ExecStartPre=/opt/bin/wupiao __MASTER_IP__:8080
-        ExecStart=/opt/bin/kubelet \
+        Environment=KUBELET_VERSION=__RELEASE___coreos.0
+        ExecStartPre=/usr/bin/rkt fetch --insecure-options=image /vagrant/binaries/hyperkube___RELEASE__.aci
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
           --address=0.0.0.0 \
           --port=10250 \
           --hostname_override=$public_ipv4 \
@@ -120,11 +107,8 @@ coreos:
           --allow_privileged=true \
           --cluster_dns=10.100.0.10 \
           --cluster_domain=__DNS_DOMAIN__ \
-          --logtostderr=true \
           --config=/opt/kubernetes/manifests/ \
-          --cadvisor_port=4194 \
-          --healthz_bind_address=0.0.0.0 \
-          --healthz_port=10248
+          --logtostderr=true
         Restart=always
         RestartSec=10
         WorkingDirectory=/root/

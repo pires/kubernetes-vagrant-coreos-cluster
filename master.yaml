@@ -39,37 +39,6 @@ coreos:
     - name: rpc-statd.service
       enable: true
       command: start
-    - name: docker-cache.service
-      command: start
-      content: |
-        [Unit]
-        Description=Docker cache proxy
-        Requires=early-docker.service
-        After=early-docker.service
-        Before=early-docker.target
-        [Service]
-        Restart=always
-        TimeoutStartSec=0
-        RestartSec=5
-        Environment="TMPDIR=/var/tmp/"
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-        ExecStartPre=-/usr/bin/docker kill docker-registry
-        ExecStartPre=-/usr/bin/docker rm docker-registry
-        ExecStartPre=/usr/bin/docker pull quay.io/devops/docker-registry:latest
-        # GUNICORN_OPTS is an workaround for
-        # https://github.com/docker/docker-registry/issues/892
-        ExecStart=/usr/bin/docker run --rm --net host --name docker-registry \
-          -e STANDALONE=false \
-          -e GUNICORN_OPTS=[--preload] \
-          -e MIRROR_SOURCE=https://registry-1.docker.io \
-          -e MIRROR_SOURCE_INDEX=https://index.docker.io \
-          -e MIRROR_TAGS_CACHE_TTL=1800 \
-          __PROXY_LINE__-e HTTP_PROXY=__HTTP_PROXY__ \
-          __PROXY_LINE__-e HTTPS_PROXY=__HTTPS_PROXY__ \
-          __PROXY_LINE__-e NO_PROXY=__NO_PROXY__ \
-          quay.io/devops/docker-registry:latest
-    - name: fleet.service
-      command: start
     - name: flanneld.service
       command: start
       drop-ins:
@@ -83,42 +52,26 @@ coreos:
       command: start
       drop-ins:
         - name: 51-docker-mirror.conf
-          content: |
-            [Unit]
-            # making sure that docker-cache is up and that flanneld finished
-            # startup, otherwise containers won't land in flannel's network...
-            Requires=docker-cache.service flanneld.service
-            After=docker-cache.service flanneld.service
-            [Service]
-            Environment="DOCKER_OPTS=__DOCKER_OPTIONS__ --registry-mirror=http://$private_ipv4:5000"
         - __PROXY_LINE__name: http-proxy.conf
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
+      drop-ins:
+        - name: 40-flannel.conf
+          content: |
+            [Unit]
+            Requires=flanneld.service
+            After=flanneld.service
+        - name: 50-docker-options.conf
+          content: |
+            [Service]
+            Environment='DOCKER_OPTS=__DOCKER_OPTIONS__'
     - name: early-docker.service
       drop-ins:
         - __PROXY_LINE__name: http-proxy.conf
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
-    - name: kube-install.service
-      command: start
-      content: |
-        [Unit]
-        Description=Download/Install Kubernetes
-        Requires=network-online.target kube-certs.service
-        After=network-online.target kube-certs.service
-        ConditionPathExists=/srv/kubernetes
-        [Service]
-        Type=oneshot
-        EnvironmentFile=/etc/environment
-        ExecStart=-/usr/bin/mkdir -p /opt/bin
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-apiserver
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-controller-manager
-        ExecStart=/usr/bin/wget -P /opt/bin https://storage.googleapis.com/kubernetes-release/release/__RELEASE__/bin/linux/amd64/kube-scheduler
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-apiserver
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-controller-manager
-        ExecStart=/usr/bin/chmod +x /opt/bin/kube-scheduler
     - name: kube-certs.service
       command: start
       content: |
@@ -133,34 +86,46 @@ coreos:
         ExecStart=/tmp/make-certs.sh $public_ipv4 IP:$public_ipv4,IP:10.100.0.1,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.__DNS_DOMAIN__
         Type=oneshot
         RemainAfterExit=true
+    - name: hyperkube-image-export.service
+      command: start
+      content: |
+        [Unit]
+        Description=Export Hyperkube rkt image for usage in worker nodes
+        Requires=network-online.target
+        After=network-online.target
+        ConditionPathExists=!/vagrant/binaries/hyperkube___RELEASE__.aci
+        [Service]
+        ExecStartPre=/usr/bin/rkt --trust-keys-from-https fetch quay.io/coreos/hyperkube:__RELEASE___coreos.0
+        ExecStart=/usr/bin/rkt image export quay.io/coreos/hyperkube:__RELEASE___coreos.0 /vagrant/binaries/hyperkube___RELEASE__.aci
+        Type=oneshot
+        RemainAfterExit=true
     - name: kube-apiserver.service
       command: start
       content: |
         [Unit]
         Description=Kubernetes API Server
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=etcd2.service docker-cache.service fleet.service docker.service flanneld.service kube-install.service
-        After=etcd2.service docker-cache.service fleet.service docker.service flanneld.service kube-install.service
+        Requires=etcd2.service flanneld.service kube-certs.service
+        After=etcd2.service flanneld.service kube-certs.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:2379/v2/machines
-        ExecStart=/opt/bin/kube-apiserver \
-          --client-ca-file=/srv/kubernetes/ca.crt \
-          --tls-cert-file=/srv/kubernetes/server.cert \
-          --tls-private-key-file=/srv/kubernetes/server.key \
-          --admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
-          --service_account_key_file=/srv/kubernetes/server.key \
-          --service_account_lookup=false \
-          --allow_privileged=true \
-          --insecure_bind_address=0.0.0.0 \
-          --insecure_port=8080 \
-          --kubelet_https=true \
-          --secure_port=6443 \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-apiserver 
+        ExecStart=/vagrant/binaries/kube-apiserver \
+          --bind-address=0.0.0.0 \
+          --etcd-servers=http://$private_ipv4:2379 \
+          --allow-privileged=true \
           --service-cluster-ip-range=10.100.0.0/16 \
-          --etcd_servers=http://$private_ipv4:2379 \
-          --bind-address=$public_ipv4 \
           --cloud_provider=__CLOUDPROVIDER__ \
-          --logtostderr=true \
-          --runtime_config=api/v1
+          --secure-port=443 \
+          --insecure_bind_address=0.0.0.0 \
+          --advertise-address=$public_ipv4 \
+          --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
+          --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem \
+          --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+          --client-ca-file=/etc/kubernetes/ssl/ca.pem \
+          --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+          --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true \
+          --logtostderr=true
         Restart=always
         RestartSec=10
     - name: kube-controller-manager.service
@@ -173,10 +138,11 @@ coreos:
         After=kube-apiserver.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
-        ExecStart=/opt/bin/kube-controller-manager \
-          --root-ca-file=/srv/kubernetes/ca.crt \
-          --service-account-private-key-file=/srv/kubernetes/server.key \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-controller-manager
+        ExecStart=/vagrant/binaries/kube-controller-manager \
           --master=$private_ipv4:8080 \
+          --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+          --root-ca-file=/etc/kubernetes/ssl/ca.pem \
           --cloud_provider=__CLOUDPROVIDER__ \
           --pod_eviction_timeout=30s \
           --logtostderr=true
@@ -192,8 +158,26 @@ coreos:
         After=kube-apiserver.service
         [Service]
         ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
-        ExecStart=/opt/bin/kube-scheduler \
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-scheduler
+        ExecStart=/vagrant/binaries/kube-scheduler \
           --master=$private_ipv4:8080
+        Restart=always
+        RestartSec=10
+    - name: kube-proxy.service
+      command: start
+      content: |
+        [Unit]
+        Description=Kubernetes Proxy
+        Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+        Requires=kube-apiserver.service
+        After=kube-apiserver.service
+        [Service]
+        ExecStartPre=/opt/bin/wupiao $private_ipv4:8080
+        ExecStartPre=/bin/chmod +x /vagrant/binaries/kube-proxy
+        ExecStart=/vagrant/binaries/kube-proxy \
+          --master=$private_ipv4:8080 \
+          --proxy-mode=iptables \
+          --logtostderr=true
         Restart=always
         RestartSec=10
   update:

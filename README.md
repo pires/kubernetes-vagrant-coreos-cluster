@@ -1,14 +1,14 @@
 # kubernetes-vagrant-coreos-cluster
 Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
-cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
+cluster setup with **[Vagrant 1.8,5+](https://www.vagrantup.com)** and
 **[CoreOS](https://coreos.com)**.
 
 ####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
- * **[Vagrant](https://www.vagrantup.com)**
- * a supported Vagrant hypervisor
+ * **[Vagrant 1.8,5+](https://www.vagrantup.com)**
+ * a supported Vagrant hypervisor:
  	* **[Virtualbox](https://www.virtualbox.org)** (the default)
  	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
  	* **[VMware Fusion](http://www.vmware.com/products/fusion)** or **[VMware Workstation](http://www.vmware.com/products/workstation)**
@@ -18,13 +18,13 @@ cluster setup with **[Vagrant](https://www.vagrantup.com)** (1.7.2+) and
 On **MacOS X** (and assuming you have [homebrew](http://brew.sh) already installed) run
 
 ```
-brew update
 brew install wget
 ```
 
 ### Windows
 
-The [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) will be installed in order to enable NFS shares.
+- The [vagrant-winnfsd plugin](https://github.com/GM-Alex/vagrant-winnfsd) will be installed in order to enable NFS shares.
+- The project will run some bash script under the VirtualMachines. These scripts line ending need to be in LF. Git for windows set `core.autocrlf true` by default at the installation time. When you clone this project repository, this parameter (set to true) ask git to change all line ending to CRLF. This behavior need to be changed before cloning the repository (or after for each files by hand). We recommand to turn this to off by running `git config --global core.autocrlf false` and `git config --global core.eol lf` before cloning. Then, after cloning, do not forget to turn the behavior back if you want to run other windows projects: `git config --global core.autocrlf true` and `git config --global core.eol crlf`.
 
 ## Deploy Kubernetes
 
@@ -37,13 +37,7 @@ vagrant up
 
 ### Linux or MacOS host
 
-Kubernetes cluster is ready. but you need to set-up some environment variables that we have already provisioned for you. In the current terminal window, run:
-
-```
-source ~/.bash_profile
-```
-
-New terminal windows will have this set for you.
+Kubernetes cluster is ready. Use `kubectl` to manage it.
 
 ### Windows host
 
@@ -77,7 +71,7 @@ VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0
 
 ### Parallels
 
-If you are using **Parallels Desktop**, you need to install **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider 
+If you are using **Parallels Desktop**, you need to install **[vagrant-parallels](http://parallels.github.io/vagrant-parallels/docs/)** provider
 ```
 vagrant plugin install vagrant-parallels
 ```
@@ -109,16 +103,16 @@ Most aspects of your cluster setup can be customized with environment variables.
  - **SERIAL_LOGGING** if set to *true* will allow logging from the VMs' serial console.
 
    Defaults to **false**. Only use this if you *really* know what you are doing.
- - **MASTER_MEM** sets the master's VM memory.
+ - **MASTER_MEM** sets the master node VM memory.
 
    Defaults to **1024** (in MB)
- - **MASTER_CPUS** sets the number os vCPUs to be used by the master's VM.
+ - **MASTER_CPUS** sets the number of vCPUs to be used by the master VM.
 
    Defaults to **1**.
- - **NODE_MEM** sets the worker nodes' (aka minions in Kubernetes lingo) VM memory.
+ - **NODE_MEM** sets the worker nodes VM memory.
 
    Defaults to **2048** (in MB)
- - **NODE_CPUS** sets the number os vCPUs to be used by the minions's VMs.
+ - **NODE_CPUS** sets the number of vCPUs to be used by node VMs.
 
    Defaults to **1**.
  - **DOCKERCFG** sets the location of your private docker repositories (and keys) configuration. However, this is only usable if you set **USE_DOCKERCFG=true**.
@@ -133,8 +127,8 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `1.1.2`.
-   Versions prior to `1.0.0` **won't work** with current cloud-config files.
+   Defaults to `1.4.3`.
+   Versions prior to `1.3.0` **won't work** with current cloud-config files.
 
  - **CLOUD_PROVIDER** defines the specific cloud provider being used. This is useful, for instance, if you're relying on kubernetes to set load-balancers for your services.
 
@@ -143,7 +137,6 @@ Most aspects of your cluster setup can be customized with environment variables.
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
 
    Defaults to `false`.
-
 
 So, in order to start, say, a Kubernetes cluster with 3 minion nodes, 4GB of RAM and 2 vCPUs per node one just would run:
 
@@ -189,7 +182,6 @@ you which to mount the allowed syntax is...
 
 ```
 vagrant up
-source ~/.bash_profile
 ```
 
 This will start one `master` and two `minion` nodes, download Kubernetes binaries start all needed services.

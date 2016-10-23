@@ -1,6 +1,5 @@
-# - name: default
-#   source: .
-#   destination: /vagrant
-#   nfs: true
-#   mount_options: 'nolock,vers=3,udp,noatime'
-#   disabled: false
+ - name: default
+   source: .
+   destination: /vagrant
+   nfs: true
+   mount_options: 'nolock,vers=3,udp,noatime'
