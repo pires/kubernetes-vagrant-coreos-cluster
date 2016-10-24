@@ -96,7 +96,7 @@ coreos:
         ConditionPathExists=!/vagrant/binaries/hyperkube___RELEASE__.tar
         [Service]
         Environment=TMPDIR=/tmp2
-        ExecStartPre=/usr/bin/mkdir /tmp2
+        ExecStartPre=/usr/bin/mkdir -p /tmp2
         ExecStart=/usr/bin/docker pull quay.io/coreos/hyperkube:__RELEASE___coreos.0
         ExecStart=/usr/bin/docker save --output /vagrant/binaries/hyperkube___RELEASE__.tar quay.io/coreos/hyperkube:__RELEASE___coreos.0
         ExecStart=/vagrant/docker2aci /vagrant/binaries/hyperkube___RELEASE__.tar && /usr/bin/mv quay.io-coreos-hyperkube-__RELEASE___coreos.0.aci /vagrant/binaries/hyperkube___RELEASE__.aci
