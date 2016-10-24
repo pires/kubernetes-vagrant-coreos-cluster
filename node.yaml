@@ -102,7 +102,6 @@ coreos:
           --api-servers=http://__MASTER_IP__:8080 \
           --network-plugin-dir=/etc/kubernetes/cni/net.d \
           --network-plugin= \
-          --register-node=true \
           --allow-privileged=true \
           --config=/etc/kubernetes/manifests \
           --hostname-override=$public_ipv4 \
