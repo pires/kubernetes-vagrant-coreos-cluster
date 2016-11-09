@@ -9,21 +9,21 @@ spec:
   - name: kube-apiserver
     image: gcr.io/google_containers/hyperkube-amd64:__RELEASE__
     command:
-    - /hyperkube
-    - apiserver
-    - --bind-address=0.0.0.0
-    - --insecure-bind-address=0.0.0.0
-    - --etcd-servers=http://127.0.0.1:2379
-    - --allow-privileged=true
-    - --service-cluster-ip-range=10.100.0.0/16
-    - --secure-port=443
-    - --advertise-address=__MASTER_IP__
-    - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
-    - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
-    - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-    - --client-ca-file=/etc/kubernetes/ssl/ca.pem
-    - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-    - --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true
+      - /hyperkube
+      - apiserver
+      - --bind-address=0.0.0.0
+      - --insecure-bind-address=0.0.0.0
+      - --etcd-servers=http://127.0.0.1:2379
+      - --allow-privileged=true
+      - --service-cluster-ip-range=10.100.0.0/16
+      - --secure-port=443
+      - --advertise-address=__MASTER_IP__
+      - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+      - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
+      - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+      - --client-ca-file=/etc/kubernetes/ssl/ca.pem
+      - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+      - --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true
     ports:
     - containerPort: 443
       hostPort: 443

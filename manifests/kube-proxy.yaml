@@ -9,10 +9,10 @@ spec:
   - name: kube-proxy
     image: gcr.io/google_containers/hyperkube-amd64:__RELEASE__
     command:
-    - /hyperkube
-    - proxy
-    - --master=http://__MASTER_IP__:8080
-    - --proxy-mode=iptables
+      - /hyperkube
+      - proxy
+      - --master=http://__MASTER_IP__:8080
+      - --proxy-mode=iptables
     securityContext:
       privileged: true
     volumeMounts:
