@@ -95,12 +95,8 @@ coreos:
         After=docker.service
         ConditionPathExists=!/vagrant/binaries/hyperkube___RELEASE__.tar
         [Service]
-        Environment=TMPDIR=/tmp2
-        ExecStartPre=/usr/bin/mkdir -p /tmp2
-        ExecStart=/usr/bin/docker pull quay.io/coreos/hyperkube:__RELEASE___coreos.0
-        ExecStart=/usr/bin/docker save --output /vagrant/binaries/hyperkube___RELEASE__.tar quay.io/coreos/hyperkube:__RELEASE___coreos.0
-        ExecStart=/vagrant/docker2aci /vagrant/binaries/hyperkube___RELEASE__.tar && /usr/bin/mv quay.io-coreos-hyperkube-__RELEASE___coreos.0.aci /vagrant/binaries/hyperkube___RELEASE__.aci
-        ExecStop=/usr/bin/rm -rf /tmp2
+        ExecStart=/usr/bin/docker pull gcr.io/google_containers/hyperkube-amd64:__RELEASE__
+        ExecStart=/usr/bin/docker save --output /vagrant/binaries/hyperkube___RELEASE__.tar gcr.io/google_containers/hyperkube-amd64:__RELEASE__
         Type=oneshot
         RemainAfterExit=true
     - name: hyperkube-import.service
@@ -108,13 +104,11 @@ coreos:
       content: |
         [Unit]
         Description=Import Hyperkube Docker image
-        Wants=hyperkube-download.service
-        After=hyperkube-download.service
+        Requires=docker.service
+        After=docker.service
         ConditionPathExists=/vagrant/binaries/hyperkube___RELEASE__.tar
-        ConditionPathExists=/vagrant/binaries/hyperkube___RELEASE__.aci
         [Service]
         ExecStart=/usr/bin/docker load --input /vagrant/binaries/hyperkube___RELEASE__.tar
-        ExecStart=/usr/bin/rkt fetch --insecure-options=image /vagrant/binaries/hyperkube___RELEASE__.aci
         Type=oneshot
         RemainAfterExit=true
     - name: kube-kubelet.service
@@ -123,26 +117,35 @@ coreos:
         [Unit]
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=kube-certs.service hyperkube-import.service
-        After=kube-certs.service hyperkube-import.service
+        Requires=kube-certs.service
+        Wants=hyperkube-download.service hyperkube-import.service
+        After=kube-certs.service hyperkube-download.service hyperkube-import.service
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
-        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
-        Environment=KUBELET_VERSION=__RELEASE___coreos.0
-        Environment="RKT_OPTS=--volume var-log,kind=host,source=/var/log \
-          --mount volume=var-log,target=/var/log \
-          --volume dns,kind=host,source=/etc/resolv.conf \
-          --mount volume=dns,target=/etc/resolv.conf"
-        ExecStart=/usr/lib/coreos/kubelet-wrapper \
-          --api-servers=http://127.0.0.1:8080 \
-          --network-plugin-dir=/etc/kubernetes/cni/net.d \
-          --network-plugin= \
-          --register-schedulable=false \
-          --allow-privileged=true \
-          --config=/etc/kubernetes/manifests \
-          --hostname-override=$public_ipv4 \
-          --cluster_dns=10.100.0.10 \
-          --cluster_domain=__DNS_DOMAIN__
+        ExecStart=/usr/bin/docker run \
+          --volume=/:/rootfs:ro \
+          --volume=/etc/kubernetes:/etc/kubernetes:ro \
+          --volume=/sys:/sys:ro \
+          --volume=/var/lib/docker/:/var/lib/docker:rw \
+          --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
+          --volume=/var/run:/var/run:rw \
+          --net=host \
+          --pid=host \
+          --privileged=true \
+          --name=kubelet \
+          -d \
+          gcr.io/google_containers/hyperkube-amd64:__RELEASE__ \
+            /hyperkube kubelet \
+            --address=$private_ipv4 \
+            --api-servers=http://127.0.0.1:8080 \
+            --network-plugin-dir=/etc/kubernetes/cni/net.d \
+            --network-plugin= \
+            --register-schedulable=false \
+            --allow-privileged=true \
+            --config=/etc/kubernetes/manifests \
+            --hostname-override=$public_ipv4 \
+            --cluster_dns=10.100.0.10 \
+            --cluster_domain=__DNS_DOMAIN__
         Restart=always
         RestartSec=10
         WorkingDirectory=/root/
