@@ -223,36 +223,36 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # create setup file
           setupFile = "#{__dir__}/temp/setup"
-
           # find and replace kubernetes version and master IP in setup file
-          setupFileData = File.read("setup.tmpl")
-          setupFileData = setupFileData.gsub("__KUBERNETES_VERSION__", KUBERNETES_VERSION);
-          setupFileData = setupFileData.gsub("__MASTER_IP__", MASTER_IP);
-
+          setupData = File.read("setup.tmpl")
+          setupData = setupData.gsub("__KUBERNETES_VERSION__", KUBERNETES_VERSION);
+          setupData = setupData.gsub("__MASTER_IP__", MASTER_IP);
           if enable_proxy
             # remove __PROXY_LINE__ flag and set __NO_PROXY__
-            setupFileData = setupFileData.gsub("__PROXY_LINE__", "");
-            setupFileData = setupFileData.gsub("__NO_PROXY__", NO_PROXY);
+            setupData = setupData.gsub("__PROXY_LINE__", "");
+            setupData = setupData.gsub("__NO_PROXY__", NO_PROXY);
           else
             # remove lines that start with __PROXY_LINE__
-            setupFileData = setupFileData.gsub(/^\s*__PROXY_LINE__.*$\n/, "");
+            setupData = setupData.gsub(/^\s*__PROXY_LINE__.*$\n/, "");
           end
-
           # write new setup data to setup file
           File.open(setupFile, "wb") do |f|
-            f.write(setupFileData)
+            f.write(setupData)
           end
 
           # give setup file executable permissions
           system "chmod +x temp/setup"
 
           # create dns-controller.yaml file
-          dnsControllerFile = "#{__dir__}/temp/dns-controller.yaml"
-          dnsControllerData = File.read("#{__dir__}/plugins/dns/dns-controller.yaml.tmpl")
-
-          dnsControllerData = dnsControllerData.gsub("__MASTER_IP__", MASTER_IP);
-          dnsControllerData = dnsControllerData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
-          dnsControllerData = dnsControllerData.gsub("__DNS_UPSTREAM_SERVERS__", DNS_UPSTREAM_SERVERS);
+          dnsFile = "#{__dir__}/temp/dns-controller.yaml"
+          dnsData = File.read("#{__dir__}/plugins/dns/dns-controller.yaml.tmpl")
+          dnsData = dnsData.gsub("__MASTER_IP__", MASTER_IP);
+          dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
+          dnsData = dnsData.gsub("__DNS_UPSTREAM_SERVERS__", DNS_UPSTREAM_SERVERS);
+          # write new setup data to setup file
+          File.open(dnsFile, "wb") do |f|
+            f.write(dnsData)
+          end
 
           # write new setup data to setup file
           File.open(dnsControllerFile, "wb") do |f|
