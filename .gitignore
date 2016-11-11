@@ -2,4 +2,4 @@
 .dockercfg
 temp/*
 synced_folders.yaml
-binaries/*
+artifacts/*

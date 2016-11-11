@@ -93,10 +93,10 @@ coreos:
         Description=Download Hyperkube Docker image
         Requires=docker.service
         After=docker.service
-        ConditionPathExists=!/vagrant/binaries/hyperkube___RELEASE__.tar
+        ConditionPathExists=!/vagrant/artifacts/hyperkube___RELEASE__.tar
         [Service]
         ExecStart=/usr/bin/docker pull gcr.io/google_containers/hyperkube-amd64:__RELEASE__
-        ExecStart=/usr/bin/docker save --output /vagrant/binaries/hyperkube___RELEASE__.tar gcr.io/google_containers/hyperkube-amd64:__RELEASE__
+        ExecStart=/usr/bin/docker save --output /vagrant/artifacts/hyperkube___RELEASE__.tar gcr.io/google_containers/hyperkube-amd64:__RELEASE__
         Type=oneshot
         RemainAfterExit=true
     - name: hyperkube-import.service
@@ -106,9 +106,9 @@ coreos:
         Description=Import Hyperkube Docker image
         Requires=docker.service
         After=docker.service
-        ConditionPathExists=/vagrant/binaries/hyperkube___RELEASE__.tar
+        ConditionPathExists=/vagrant/artifacts/hyperkube___RELEASE__.tar
         [Service]
-        ExecStart=/usr/bin/docker load --input /vagrant/binaries/hyperkube___RELEASE__.tar
+        ExecStart=/usr/bin/docker load --input /vagrant/artifacts/hyperkube___RELEASE__.tar
         Type=oneshot
         RemainAfterExit=true
     - name: kube-kubelet.service
