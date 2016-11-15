@@ -83,7 +83,7 @@ coreos:
         [Service]
         ExecStartPre=-/usr/sbin/groupadd -r kube-cert
         ExecStartPre=/usr/bin/chmod 755 /tmp/make-certs.sh
-        ExecStart=/tmp/make-certs.sh $public_ipv4 IP:$public_ipv4,IP:10.100.0.1,DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.__DNS_DOMAIN__
+        ExecStart=/tmp/make-certs.sh
         Type=oneshot
         RemainAfterExit=true
     - name: hyperkube-download.service
@@ -124,8 +124,8 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStart=/usr/bin/docker run \
           --volume=/:/rootfs:ro \
-          --volume=/etc/kubernetes:/etc/kubernetes:ro \
           --volume=/sys:/sys:ro \
+          --volume=/etc/kubernetes:/etc/kubernetes:ro \
           --volume=/var/lib/docker/:/var/lib/docker:rw \
           --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
           --volume=/var/run:/var/run:rw \

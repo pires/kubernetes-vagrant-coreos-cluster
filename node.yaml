@@ -68,6 +68,20 @@ coreos:
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
+    - name: kube-certs.service
+      command: start
+      content: |
+        [Unit]
+        Description=Generate Kubernetes Node certificates
+        ConditionPathExists=/tmp/make-certs.sh
+        Requires=network-online.target
+        After=network-online.target
+        [Service]
+        ExecStartPre=-/usr/sbin/groupadd -r kube-cert
+        ExecStartPre=/usr/bin/chmod 755 /tmp/make-certs.sh
+        ExecStart=/tmp/make-certs.sh
+        Type=oneshot
+        RemainAfterExit=true
     - name: hyperkube-import.service
       command: start
       content: |
@@ -86,14 +100,14 @@ coreos:
         [Unit]
         Description=Kubernetes Kubelet
         Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-        Requires=hyperkube-import.service
-        After=hyperkube-import.service
+        Requires=hyperkube-import.service kube-certs.service
+        After=hyperkube-import.service kube-certs.service
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStart=/usr/bin/docker run \
           --volume=/:/rootfs:ro \
-          --volume=/etc/kubernetes:/etc/kubernetes:ro \
           --volume=/sys:/sys:ro \
+          --volume=/etc/kubernetes:/etc/kubernetes:ro \
           --volume=/var/lib/docker/:/var/lib/docker:rw \
           --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
           --volume=/var/run:/var/run:rw \
@@ -112,7 +126,10 @@ coreos:
             --config=/etc/kubernetes/manifests \
             --hostname-override=$public_ipv4 \
             --cluster_dns=10.100.0.10 \
-            --cluster_domain=__DNS_DOMAIN__
+            --cluster_domain=__DNS_DOMAIN__ \
+            --kubeconfig=/etc/kubernetes/node-kubeconfig.yaml \
+            --tls-cert-file=/etc/kubernetes/ssl/node.pem \
+            --tls-private-key-file=/etc/kubernetes/ssl/node-key.pem
         Restart=always
         RestartSec=10
         WorkingDirectory=/root/

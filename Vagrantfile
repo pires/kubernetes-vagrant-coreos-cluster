@@ -62,7 +62,11 @@ Vagrant.require_version ">= 1.8.6"
 
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
-CERTS_SCRIPT = File.join(File.dirname(__FILE__), "make-certs.sh")
+
+CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master.sh")
+CERTS_MASTER_CONF = File.join(File.dirname(__FILE__), "tls/openssl-master.cnf.tmpl")
+CERTS_NODE_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-node.sh")
+CERTS_NODE_CONF = File.join(File.dirname(__FILE__), "tls/openssl-node.cnf.tmpl")
 
 MANIFESTS_DIR = Pathname.getwd().join("manifests")
 
@@ -294,12 +298,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # set cluster
           if OS.windows?
-            run_remote "/opt/bin/kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
-            run_remote "/opt/bin/kubectl config set-context local --cluster=local --namespace=default"
+            run_remote "/opt/bin/kubectl config set-cluster default-cluster --server=https://#{MASTER_IP} --certificate-authority=artifacts/tls/ca.pem"
+            run_remote "/opt/bin/kubectl config set-credentials default-admin --certificate-authority=artifacts/tls/ca.pem --client-key=artifacts/tls/admin-key.pem --client-certificate=artifacts/tls/admin.pem"
+            run_remote "/opt/bin/kubectl config set-context local --cluster=default-cluster --user=default-admin"
             run_remote "/opt/bin/kubectl config use-context local"
           else
-            system "kubectl config set-cluster local --server=http://#{MASTER_IP}:8080 --insecure-skip-tls-verify=true"
-            system "kubectl config set-context local --cluster=local --namespace=default"
+            system "kubectl config set-cluster default-cluster --server=https://#{MASTER_IP} --certificate-authority=artifacts/tls/ca.pem"
+            system "kubectl config set-credentials default-admin --certificate-authority=artifacts/tls/ca.pem --client-key=artifacts/tls/admin-key.pem --client-certificate=artifacts/tls/admin.pem"
+            system "kubectl config set-context local --cluster=default-cluster --user=default-admin"
             system "kubectl config use-context local"
           end
 
@@ -379,6 +385,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # clean temp directory after master is destroyed
         kHost.trigger.after [:destroy] do
           FileUtils.rm_rf(Dir.glob("#{__dir__}/temp/*"))
+          FileUtils.rm_rf(Dir.glob("#{__dir__}/artifacts/tls/*"))
         end
       end
 
@@ -501,8 +508,47 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
       end
 
-      if File.exist?(CERTS_SCRIPT)
-        kHost.vm.provision :file, :source => "#{CERTS_SCRIPT}", :destination => "/tmp/make-certs.sh"
+      # Copy TLS stuff
+      if vmName == "master"
+        kHost.vm.provision :file, :source => "#{CERTS_MASTER_SCRIPT}", :destination => "/tmp/make-certs.sh"
+        kHost.vm.provision :file, :source => "#{CERTS_MASTER_CONF}", :destination => "/tmp/openssl.cnf"
+        kHost.vm.provision :shell, :privileged => true,
+        inline: <<-EOF
+          sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/openssl.cnf
+          sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/openssl.cnf
+        EOF
+      else
+        kHost.vm.provision :file, :source => "#{CERTS_NODE_SCRIPT}", :destination => "/tmp/make-certs.sh"
+        kHost.vm.provision :file, :source => "#{CERTS_NODE_CONF}", :destination => "/tmp/openssl.cnf"
+        kHost.vm.provision :shell, :privileged => true,
+        inline: <<-EOF
+          sed -i"*" "s|__NODE_IP__|#{BASE_IP_ADDR}.#{i+100}|g" /tmp/openssl.cnf
+        EOF
+        kHost.vm.provision :shell, run: "always" do |s|
+          s.inline = "mkdir -p /etc/kubernetes && cp -R /vagrant/tls/node-kubeconfig.yaml /etc/kubernetes/node-kubeconfig.yaml"
+          s.privileged = true
+        end
+      end
+
+      # Process Kubernetes manifests, depending on node type
+      begin
+        if vmName == "master"
+          kHost.vm.provision :shell, run: "always" do |s|
+            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/master* /etc/kubernetes/manifests"
+            s.privileged = true
+          end
+        else
+          kHost.vm.provision :shell, run: "always" do |s|
+            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/node* /etc/kubernetes/manifests/"
+            s.privileged = true
+          end
+        end
+        kHost.vm.provision :shell, :privileged => true,
+        inline: <<-EOF
+          sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /etc/kubernetes/manifests/*.yaml
+          sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/manifests/*.yaml
+          sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /etc/kubernetes/manifests/*.yaml
+        EOF
       end
 
       # Process vagrantfile
@@ -528,27 +574,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
-        EOF
-      end
-
-      # Process Kubernetes manifests, depending on node type
-      begin
-        if vmName == "master"
-          kHost.vm.provision :shell, run: "always" do |s|
-            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/* /etc/kubernetes/manifests"
-            s.privileged = true
-          end
-        else
-          kHost.vm.provision :shell, run: "always" do |s|
-            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/kube-proxy.yaml /etc/kubernetes/manifests/"
-            s.privileged = true
-          end
-        end
-        kHost.vm.provision :shell, :privileged => true,
-        inline: <<-EOF
-          sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /etc/kubernetes/manifests/*.yaml
-          sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/manifests/*.yaml
-          sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /etc/kubernetes/manifests/*.yaml
         EOF
       end
 
