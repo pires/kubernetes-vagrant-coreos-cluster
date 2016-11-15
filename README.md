@@ -127,7 +127,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `1.4.5`.
+   Defaults to `1.4.6`.
    Versions prior to `1.3.0` **won't work** with current cloud-config files.
 
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
@@ -173,6 +173,8 @@ you which to mount the allowed syntax is...
 # if the mount is enabled or disabled by default. default is `true`.
   disabled: false
 ```
+
+**ATTENTION:** Don't remove `/vagrant` entry.
 
 ## TL;DR
 
