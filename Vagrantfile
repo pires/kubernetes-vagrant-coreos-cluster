@@ -63,7 +63,6 @@ Vagrant.require_version ">= 1.8.6"
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 CERTS_SCRIPT = File.join(File.dirname(__FILE__), "make-certs.sh")
-DOCKER2ACI = File.join(File.dirname(__FILE__), "docker2aci")
 
 MANIFESTS_DIR = Pathname.getwd().join("manifests")
 
