@@ -256,11 +256,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           File.open(dnsFile, "wb") do |f|
             f.write(dnsData)
           end
-
-          # write new setup data to setup file
-          File.open(dnsControllerFile, "wb") do |f|
-            f.write(dnsControllerData)
-          end
         end
 
         kHost.trigger.after [:up, :resume] do
