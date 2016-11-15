@@ -390,6 +390,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
 
       if vmName == "node-%02d" % (i - 1)
+        kHost.trigger.before [:up, :provision] do
+          info "#{Time.now}: setting up node..."
+        end
+        
         kHost.trigger.after [:up] do
           info "Waiting for Kubernetes minion [node-%02d" % (i - 1) + "] to become ready..."
           j, uri, hasResponse = 0, URI("http://#{BASE_IP_ADDR}.#{i+100}:10250"), false
