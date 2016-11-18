@@ -48,11 +48,11 @@ coreos:
     - name: docker.service
       command: start
       drop-ins:
+        - name: 51-docker-mirror.conf
         - __PROXY_LINE__name: http-proxy.conf
           __PROXY_LINE__content: |
-          __PROXY_LINE__[Service]
-          __PROXY_LINE__EnvironmentFile=/etc/environment
-      drop-ins:
+            __PROXY_LINE__[Service]
+            __PROXY_LINE__EnvironmentFile=/etc/environment
         - name: 40-flannel.conf
           content: |
             [Unit]
@@ -118,6 +118,7 @@ coreos:
           -d \
           gcr.io/google_containers/hyperkube-amd64:__RELEASE__ \
             /hyperkube kubelet \
+            --containerized \
             --address=$private_ipv4 \
             --api-servers=http://__MASTER_IP__:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \

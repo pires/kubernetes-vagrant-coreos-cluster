@@ -56,7 +56,6 @@ coreos:
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
-      drop-ins:
         - name: 40-flannel.conf
           content: |
             [Unit]
