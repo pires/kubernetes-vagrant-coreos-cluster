@@ -15,6 +15,7 @@ spec:
       - --insecure-bind-address=0.0.0.0
       - --etcd-servers=http://127.0.0.1:2379
       - --allow-privileged=true
+      - --anonymous-auth=false
       - --service-cluster-ip-range=10.100.0.0/16
       - --secure-port=443
       - --advertise-address=__MASTER_IP__
