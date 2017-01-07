@@ -121,7 +121,7 @@ coreos:
         After=kube-certs.service hyperkube-download.service hyperkube-import.service
         [Service]
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
-        ExecStartPre=/usr/bin/docker rm -f kubelet
+        ExecStartPre=-/usr/bin/docker rm -f kubelet
         ExecStart=/usr/bin/docker run \
           --volume=/:/rootfs:ro \
           --volume=/sys:/sys:ro \
