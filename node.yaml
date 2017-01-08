@@ -132,7 +132,7 @@ coreos:
             --kubeconfig=/etc/kubernetes/node-kubeconfig.yaml \
             --tls-cert-file=/etc/kubernetes/ssl/node.pem \
             --tls-private-key-file=/etc/kubernetes/ssl/node-key.pem
-        Restart=always
+        Restart=on-failre
         RestartSec=10
         WorkingDirectory=/root/
         [Install]

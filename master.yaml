@@ -146,7 +146,7 @@ coreos:
             --hostname-override=$public_ipv4 \
             --cluster_dns=10.100.0.10 \
             --cluster_domain=__DNS_DOMAIN__
-        Restart=always
+        Restart=on-failure
         RestartSec=10
         WorkingDirectory=/root/
         [Install]
