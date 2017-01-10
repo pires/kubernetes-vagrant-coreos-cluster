@@ -61,7 +61,7 @@ coreos:
         - name: 50-docker-options.conf
           content: |
             [Service]
-            Environment='DOCKER_OPTS=--storage-driver=overlay2 __DOCKER_OPTIONS__'
+            Environment='DOCKER_OPTS=__DOCKER_OPTIONS__'
     - name: early-docker.service
       drop-ins:
         - __PROXY_LINE__name: http-proxy.conf
