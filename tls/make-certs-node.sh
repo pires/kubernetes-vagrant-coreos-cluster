@@ -8,7 +8,7 @@ cert_group=kube-cert
 cert_dir=/etc/kubernetes/ssl
 host_cert_dir=/vagrant/artifacts/tls
 
-mkdir  "$cert_dir"
+mkdir -p "$cert_dir"
 
 cp  $host_cert_dir/ca.pem $cert_dir/ca.pem
 cp  $host_cert_dir/ca-key.pem $cert_dir/ca-key.pem
