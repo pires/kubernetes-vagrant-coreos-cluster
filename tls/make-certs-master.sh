@@ -33,7 +33,7 @@ chmod 600 $pem_ca_key $pem_server_key
 chmod 660 $pem_ca $pem_server
 
 # Copy CA stuff to host so worked nodes can use it
-cp -p $pem_ca $pem_ca_key /vagrant/artifacts/tls
+cp $pem_ca $pem_ca_key /vagrant/artifacts/tls
 
 # Generate admin
 openssl genrsa -out $pem_admin_key 2048

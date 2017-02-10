@@ -10,8 +10,8 @@ host_cert_dir=/vagrant/artifacts/tls
 
 mkdir -p "$cert_dir"
 
-cp -p $host_cert_dir/ca.pem $cert_dir/ca.pem
-cp -p $host_cert_dir/ca-key.pem $cert_dir/ca-key.pem
+cp  $host_cert_dir/ca.pem $cert_dir/ca.pem
+cp  $host_cert_dir/ca-key.pem $cert_dir/ca-key.pem
 
 pem_ca=$cert_dir/ca.pem
 pem_ca_key=$cert_dir/ca-key.pem
