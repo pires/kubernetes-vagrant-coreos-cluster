@@ -32,9 +32,9 @@ spec:
       name: ssl-certs-host
       readOnly: true
   volumes:
-  - hostPath:
+  - name: ssl-certs-kubernetes
+    hostPath:
       path: /etc/kubernetes/ssl
-    name: ssl-certs-kubernetes
-  - hostPath:
+  - name: ssl-certs-host
+    hostPath:
       path: /usr/share/ca-certificates
-    name: ssl-certs-host
