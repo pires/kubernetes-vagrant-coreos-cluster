@@ -20,6 +20,6 @@ spec:
       name: ssl-certs-host
       readOnly: true
   volumes:
-  - hostPath:
+  - name: ssl-certs-host
+    hostPath:
       path: /usr/share/ca-certificates
-    name: ssl-certs-host
