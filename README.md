@@ -1,13 +1,13 @@
 # kubernetes-vagrant-coreos-cluster
 Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
-cluster setup with **[Vagrant 1.8,5+](https://www.vagrantup.com)** and
+cluster setup with **[Vagrant 1.8,6+](https://www.vagrantup.com)** and
 **[CoreOS](https://coreos.com)**.
 
 ####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
- * **[Vagrant 1.8,5+](https://www.vagrantup.com)**
+ * **[Vagrant 1.8,6+](https://www.vagrantup.com)**
  * a supported Vagrant hypervisor:
  	* **[Virtualbox](https://www.virtualbox.org)** (the default)
  	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
@@ -127,7 +127,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `1.5.2`.
+   Defaults to `1.5.3`.
    Versions prior to `1.4.0` **won't work** with current cloud-config files.
 
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
