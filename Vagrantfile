@@ -293,8 +293,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # set cluster
           if OS.windows?
-            run_remote "/opt/bin/kubectl config set-cluster default-cluster --server=https://#{MASTER_IP} --certificate-authority=artifacts/tls/ca.pem"
-            run_remote "/opt/bin/kubectl config set-credentials default-admin --certificate-authority=artifacts/tls/ca.pem --client-key=artifacts/tls/admin-key.pem --client-certificate=artifacts/tls/admin.pem"
+            run_remote "/opt/bin/kubectl config set-cluster default-cluster --server=https://#{MASTER_IP} --certificate-authority=/vagrant/artifacts/tls/ca.pem"
+            run_remote "/opt/bin/kubectl config set-credentials default-admin --certificate-authority=/vagrant/artifacts/tls/ca.pem --client-key=/vagrant/artifacts/tls/admin-key.pem --client-certificate=/vagrant/artifacts/tls/admin.pem"
             run_remote "/opt/bin/kubectl config set-context local --cluster=default-cluster --user=default-admin"
             run_remote "/opt/bin/kubectl config use-context local"
           else
@@ -388,7 +388,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.trigger.before [:up, :provision] do
           info "#{Time.now}: setting up node..."
         end
-        
+
         kHost.trigger.after [:up] do
           info "Waiting for Kubernetes minion [node-%02d" % (i - 1) + "] to become ready..."
           j, uri, hasResponse = 0, URI("http://#{BASE_IP_ADDR}.#{i+100}:10250"), false
