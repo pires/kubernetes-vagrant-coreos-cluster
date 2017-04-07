@@ -142,7 +142,7 @@ coreos:
             --network-plugin= \
             --register-schedulable=false \
             --allow-privileged=true \
-            --config=/etc/kubernetes/manifests \
+            --pod-manifest-path=/etc/kubernetes/manifests \
             --hostname-override=$public_ipv4 \
             --cluster_dns=10.100.0.10 \
             --cluster_domain=__DNS_DOMAIN__
