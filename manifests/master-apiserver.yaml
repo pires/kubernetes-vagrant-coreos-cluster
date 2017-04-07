@@ -11,6 +11,8 @@ spec:
     command:
       - /hyperkube
       - apiserver
+      - --storage-backend=etcd2
+      - --storage-media-type=application/json
       - --bind-address=0.0.0.0
       - --insecure-bind-address=0.0.0.0
       - --etcd-servers=http://127.0.0.1:2379
