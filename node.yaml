@@ -24,9 +24,6 @@ coreos:
     advertise-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
     initial-cluster: __ETCD_SEED_CLUSTER__
     proxy: on
-  fleet:
-    public-ip: $public_ipv4
-    metadata: "role=minion"
   flannel:
     interface: $public_ipv4
   units:

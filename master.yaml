@@ -27,9 +27,6 @@ coreos:
     initial-advertise-peer-urls: http://$private_ipv4:2380
     initial-cluster: __ETCD_SEED_CLUSTER__
     initial-cluster-state: new
-  fleet:
-    public-ip: $public_ipv4
-    metadata: "role=master"
   flannel:
     interface: $public_ipv4
   units:
