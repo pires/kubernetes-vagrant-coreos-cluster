@@ -567,7 +567,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
           sed -i"*" "s,__DOCKER_OPTIONS__,#{DOCKER_OPTIONS},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
-          sed -i"*" "s,__CHANNEL__,v#{CHANNEL},g" /tmp/vagrantfile-user-data
+          sed -i"*" "s,__CHANNEL__,#{CHANNEL},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
