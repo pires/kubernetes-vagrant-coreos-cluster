@@ -18,12 +18,6 @@ write-files:
       exit $?
 
 coreos:
-  etcd2:
-    name: __NAME__
-    listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
-    advertise-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
-    initial-cluster: __ETCD_SEED_CLUSTER__
-    proxy: on
   flannel:
     interface: $public_ipv4
   units:
@@ -33,13 +27,39 @@ coreos:
     - name: rpc-statd.service
       enable: true
       command: start
+    - name: etcd3.service
+      command: start
+      content: |
+        [Unit]
+        Description=etcd
+        Documentation=https://github.com/coreos/etcd
+        [Service]
+        Environment='ETCD_IMAGE_TAG=latest'
+        Environment='ETCD_DATA_DIR=/var/lib/etcd'
+        Environment='ETCD_USER=etcd'
+        Type=notify
+        Restart=always
+        RestartSec=5s
+        LimitNOFILE=40000
+        TimeoutStartSec=0
+        ExecStart=/usr/lib/coreos/etcd-wrapper --name __NAME__ \
+            --data-dir /var/lib/etcd \
+            --listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
+            --advertise-client-urls http://$public_ipv4:2379,http://$public_ipv4:4001 \
+            --listen-peer-urls http://$private_ipv4:2380,http://$private_ipv4:7001 \
+            --initial-advertise-peer-urls http://$private_ipv4:2380 \
+            --initial-cluster __ETCD_SEED_CLUSTER__ \
+            --initial-cluster-token k8s_etcd \
+            --initial-cluster-state new
+        [Install]
+        WantedBy=multi-user.target
     - name: flanneld.service
       command: start
       drop-ins:
         - name: 50-network-config.conf
           content: |
             [Unit]
-            Requires=etcd2.service
+            Requires=etcd3.service
             [Service]
             ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "host-gw"}}'
     - name: docker.service
