@@ -43,14 +43,11 @@ coreos:
         LimitNOFILE=40000
         TimeoutStartSec=0
         ExecStart=/usr/lib/coreos/etcd-wrapper --name __NAME__ \
-            --data-dir /var/lib/etcd \
             --listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
             --advertise-client-urls http://$public_ipv4:2379,http://$public_ipv4:4001 \
             --listen-peer-urls http://$private_ipv4:2380,http://$private_ipv4:7001 \
             --initial-advertise-peer-urls http://$private_ipv4:2380 \
-            --initial-cluster __ETCD_SEED_CLUSTER__ \
-            --initial-cluster-token k8s_etcd \
-            --initial-cluster-state new
+            --discovery __ETCD_SEED_CLUSTER__
         [Install]
         WantedBy=multi-user.target
     - name: flanneld.service

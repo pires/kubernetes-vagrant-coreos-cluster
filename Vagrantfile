@@ -185,14 +185,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.proxy.enabled = { docker: false }
   end
 
+  etcd_seed_cluster = Net::HTTP.get(URI.parse("https://discovery.etcd.io/new?size=%d" % (NODES.to_i + 1)))
+
   (1..(NODES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
-      ETCD_SEED_CLUSTER = "#{hostname}=http://#{BASE_IP_ADDR}.#{i+100}:2380"
       cfg = MASTER_YAML
       memory = MASTER_MEM
       cpus = MASTER_CPUS
-      MASTER_IP="#{BASE_IP_ADDR}.#{i+100}"
+      MASTER_IP = "#{BASE_IP_ADDR}.#{i+100}"
     else
       hostname = "node-%02d" % (i - 1)
       cfg = NODE_YAML
@@ -571,7 +572,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s,__NAME__,#{hostname},g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
-          sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{etcd_seed_cluster}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
