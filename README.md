@@ -3,7 +3,7 @@ Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
 cluster setup with **[Vagrant 1.8,6+](https://www.vagrantup.com)** and
 **[CoreOS](https://coreos.com)**.
 
-####If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
+If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
