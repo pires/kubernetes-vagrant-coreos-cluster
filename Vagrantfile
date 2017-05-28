@@ -192,7 +192,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       cfg = MASTER_YAML
       memory = MASTER_MEM
       cpus = MASTER_CPUS
-      MASTER_IP = "#{BASE_IP_ADDR}.#{i+100}"
+      MASTER_IP="#{BASE_IP_ADDR}.#{i+100}"
     else
       hostname = "node-%02d" % (i - 1)
       cfg = NODE_YAML
