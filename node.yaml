@@ -48,8 +48,7 @@ coreos:
             --advertise-client-urls http://$public_ipv4:2379,http://$public_ipv4:4001 \
             --listen-peer-urls http://$private_ipv4:2380,http://$private_ipv4:7001 \
             --initial-advertise-peer-urls http://$private_ipv4:2380 \
-            --initial-cluster __ETCD_SEED_CLUSTER__ \
-            --initial-cluster-state new
+            --initial-cluster __ETCD_SEED_CLUSTER__
         [Install]
         WantedBy=multi-user.target
     - name: flanneld.service
