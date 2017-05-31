@@ -78,7 +78,7 @@ vagrant plugin install vagrant-parallels
 Then just add ```--provider parallels``` to the ```vagrant up``` invocations above.
 
 ### VMware
-If you are using one of the **VMware** hypervisors you must **[buy](http://www.vagrantup.com/vmware)** the matching  provider and, depending on your case, just add either ```--provider vmware-fusion``` or ```--provider vmware-workstation``` to the ```vagrant up``` invocations above.
+If you are using one of the **VMware** hypervisors you must **[buy](http://www.vagrantup.com/vmware)** the matching  provider and, depending on your case, just add either ```--provider vmware_fusion``` or ```--provider vmware_workstation``` to the ```vagrant up``` invocations above.
 
 ## Private Docker Repositories
 
