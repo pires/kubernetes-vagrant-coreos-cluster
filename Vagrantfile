@@ -126,7 +126,7 @@ REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BE
 # if this is set true, remember to use --provision when executing vagrant up / reload
 
 # Read YAML file with mountpoint details
-MOUNT_POINTS = YAML::load_file('synced_folders.yaml')
+MOUNT_POINTS = YAML::load_file(File.join(File.dirname(__FILE__), "synced_folders.yaml"))
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use host timezone in VMs
