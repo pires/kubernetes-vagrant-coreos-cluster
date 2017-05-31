@@ -1,5 +1,8 @@
 .vagrant
 .dockercfg
+.editorconfig
+.ruby-gemset
+.ruby-version
 temp/*
 synced_folders.yaml
 artifacts/*
