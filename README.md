@@ -7,7 +7,7 @@ If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
- * **[Vagrant 1.8,6+](https://www.vagrantup.com)**
+ * **[Vagrant 1.8.6+](https://www.vagrantup.com)**
  * a supported Vagrant hypervisor:
  	* **[Virtualbox](https://www.virtualbox.org)** (the default)
  	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
