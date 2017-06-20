@@ -127,7 +127,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `1.6.4`.
+   Defaults to `1.6.6`.
    Versions prior to `1.5.0` **won't work** with current cloud-config files.
 
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
