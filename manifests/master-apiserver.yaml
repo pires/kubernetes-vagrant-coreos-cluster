@@ -25,7 +25,7 @@ spec:
       - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
       - --client-ca-file=/etc/kubernetes/ssl/ca.pem
       - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-      - --runtime-config=extensions/v1beta1=true,extensions/v1beta1/networkpolicies=true,batch/v2alpha1=true
+      - --runtime-config=extensions/v1beta1=true,networking.k8s.io/v1,batch/v2alpha1=true,admissionregistration.k8s.io/v1alpha1
     ports:
     - containerPort: 443
       hostPort: 443
