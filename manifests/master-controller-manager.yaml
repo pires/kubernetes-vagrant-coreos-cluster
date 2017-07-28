@@ -16,7 +16,6 @@ spec:
       - --root-ca-file=/etc/kubernetes/ssl/ca.pem
       - --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem
       - --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem
-      - --insecure-experimental-approve-all-kubelet-csrs-for-group=system:kubelet-bootstrap
     livenessProbe:
       httpGet:
         host: 127.0.0.1
