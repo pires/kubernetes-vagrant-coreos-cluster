@@ -108,7 +108,6 @@ NODE_CPUS = ENV['NODE_CPUS'] || 2
 BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
 
 DNS_DOMAIN = ENV['DNS_DOMAIN'] || "cluster.local"
-DNS_UPSTREAM_SERVERS = ENV['DNS_UPSTREAM_SERVERS'] || "8.8.8.8:53,8.8.4.4:53"
 
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
 GUI = (ENV['GUI'].to_s.downcase == 'true')
@@ -246,12 +245,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           # give setup file executable permissions
           system "chmod +x temp/setup"
 
-          # create dns-controller.yaml file
-          dnsFile = "#{__dir__}/temp/dns-controller.yaml"
-          dnsData = File.read("#{__dir__}/plugins/dns/dns-controller.yaml.tmpl")
-          dnsData = dnsData.gsub("__MASTER_IP__", MASTER_IP);
+          # create dns-deployment.yaml file
+          dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
+          dnsData = File.read("#{__dir__}/plugins/dns/dns-deployment.yaml.tmpl")
           dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
-          dnsData = dnsData.gsub("__DNS_UPSTREAM_SERVERS__", DNS_UPSTREAM_SERVERS);
           # write new setup data to setup file
           File.open(dnsFile, "wb") do |f|
             f.write(dnsData)
@@ -312,9 +309,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
           if not res.is_a? Net::HTTPSuccess
             if OS.windows?
-              run_remote "/opt/bin/kubectl create -f /home/core/dns-controller.yaml"
+              run_remote "/opt/bin/kubectl create -f /home/core/dns-deployment.yaml"
             else
-              system "kubectl create -f temp/dns-controller.yaml"
+              system "kubectl create -f temp/dns-deployment.yaml"
             end
           end
 
@@ -325,8 +322,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
           if not res.is_a? Net::HTTPSuccess
             if OS.windows?
+              run_remote "/opt/bin/kubectl create -f /home/core/dns-configmap.yaml"
               run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
             else
+              system "kubectl create -f plugins/dns/dns-configmap.yaml"
               system "kubectl create -f plugins/dns/dns-service.yaml"
             end
           end
@@ -368,7 +367,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # copy setup files to master vm if host is windows
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-controller.yaml"), :destination => "/home/core/dns-controller.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
           if USE_KUBE_UI
