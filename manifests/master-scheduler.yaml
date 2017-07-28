@@ -12,7 +12,6 @@ spec:
       - /hyperkube
       - scheduler
       - --master=http://__MASTER_IP__:8080
-      - --leader-elect=true
     livenessProbe:
       httpGet:
         host: 127.0.0.1
