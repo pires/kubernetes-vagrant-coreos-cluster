@@ -341,9 +341,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             end
             if not res.is_a? Net::HTTPSuccess
               if OS.windows?
-                run_remote "/opt/bin/kubectl create -f /home/core/dashboard-controller.yaml"
+                run_remote "/opt/bin/kubectl create -f /home/core/dashboard-deployment.yaml"
               else
-                system "kubectl create -f plugins/dashboard/dashboard-controller.yaml"
+                system "kubectl create -f plugins/dashboard/dashboard-deployment.yaml"
               end
             end
 
@@ -372,7 +372,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
           if USE_KUBE_UI
-            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-controller.yaml"), :destination => "/home/core/dashboard-controller.yaml"
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-deployment.yaml"), :destination => "/home/core/dashboard-deployment.yaml"
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-service.yaml"), :destination => "/home/core/dashboard-service.yaml"
           end
         end
