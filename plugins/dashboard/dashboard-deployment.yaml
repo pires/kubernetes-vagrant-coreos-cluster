@@ -26,7 +26,7 @@ spec:
         k8s-app: kubernetes-dashboard
     spec:
       containers:
-      - image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.2
+      - image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.6.3
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
