@@ -119,7 +119,7 @@ spec:
         args:
         - -v=2
         - -logtostderr
-        - -configDir=/etc/k8s/dns/dnsmasq-nanny
+        - -configDir=/etc/k8s/dns/kube-dns/dnsmasq-nanny
         - -restartDnsmasq=true
         - --
         - -k
@@ -142,7 +142,7 @@ spec:
             memory: 20Mi
         volumeMounts:
         - name: kube-dns-config
-          mountPath: /etc/k8s/dns/dnsmasq-nanny
+          mountPath: /etc/k8s/dns/kube-dns/dnsmasq-nanny
       - name: sidecar
         image: gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.4
         livenessProbe:

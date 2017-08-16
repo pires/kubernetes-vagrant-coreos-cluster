@@ -247,7 +247,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # create dns-deployment.yaml file
           dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
-          dnsData = File.read("#{__dir__}/plugins/dns/dns-deployment.yaml.tmpl")
+          dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment.yaml.tmpl")
           dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
           # write new setup data to setup file
           File.open(dnsFile, "wb") do |f|
@@ -325,8 +325,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               run_remote "/opt/bin/kubectl create -f /home/core/dns-configmap.yaml"
               run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
             else
-              system "kubectl create -f plugins/dns/dns-configmap.yaml"
-              system "kubectl create -f plugins/dns/dns-service.yaml"
+              system "kubectl create -f plugins/dns/kube-dns/dns-configmap.yaml"
+              system "kubectl create -f plugins/dns/kube-dns/dns-service.yaml"
             end
           end
 
@@ -367,9 +367,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # copy setup files to master vm if host is windows
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
 
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-deployment.yaml"), :destination => "/home/core/dashboard-deployment.yaml"
