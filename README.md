@@ -134,6 +134,10 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to `false`.
 
+ - **DNS_PROVIDER** defines which dns provider to use. Options are: `kube-dns` and `coredns`.
+
+   Defaults to `kube-dns`.
+
 So, in order to start, say, a Kubernetes cluster with 3 worker nodes, 4GB of RAM and 4 vCPUs per node one just would run:
 
 ```

@@ -107,6 +107,7 @@ NODE_CPUS = ENV['NODE_CPUS'] || 2
 
 BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
 
+DNS_PROVIDER = ENV['DNS_PROVIDER'] || "kube-dns"
 DNS_DOMAIN = ENV['DNS_DOMAIN'] || "cluster.local"
 
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
@@ -244,14 +245,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # give setup file executable permissions
           system "chmod +x temp/setup"
-
-          # create dns-deployment.yaml file
-          dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
-          dnsData = File.read("#{__dir__}/plugins/dns/dns-deployment.yaml.tmpl")
-          dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
-          # write new setup data to setup file
-          File.open(dnsFile, "wb") do |f|
-            f.write(dnsData)
+          
+          if DNS_PROVIDER == "kube-dns"
+              # create dns-deployment.yaml file
+              dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
+              dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment.yaml.tmpl")
+              dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
+              # write new setup data to setup file
+              File.open(dnsFile, "wb") do |f|
+                f.write(dnsData)
+              end
+          else if DNS_PROVIDER == "coredns"
+                system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
+               end 
           end
         end
 
@@ -302,32 +308,49 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
 
           info "Configuring Kubernetes DNS..."
-          res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-dns'
-          begin
-            res = Net::HTTP.get_response(uri)
-          rescue
-          end
-          if not res.is_a? Net::HTTPSuccess
-            if OS.windows?
-              run_remote "/opt/bin/kubectl create -f /home/core/dns-deployment.yaml"
-            else
-              system "kubectl create -f temp/dns-deployment.yaml"
-            end
-          end
+          
+          if DNS_PROVIDER == "kube-dns"
+              res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-dns'
+              begin
+                res = Net::HTTP.get_response(uri)
+              rescue
+              end
+              if not res.is_a? Net::HTTPSuccess
+                if OS.windows?
+                  run_remote "/opt/bin/kubectl create -f /home/core/dns-deployment.yaml"
+                else
+                  system "kubectl create -f temp/dns-deployment.yaml"
+                end
+              end
 
-          res, uri.path = nil, '/api/v1/namespaces/kube-system/services/kube-dns'
-          begin
-            res = Net::HTTP.get_response(uri)
-          rescue
-          end
-          if not res.is_a? Net::HTTPSuccess
-            if OS.windows?
-              run_remote "/opt/bin/kubectl create -f /home/core/dns-configmap.yaml"
-              run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
-            else
-              system "kubectl create -f plugins/dns/dns-configmap.yaml"
-              system "kubectl create -f plugins/dns/dns-service.yaml"
-            end
+              res, uri.path = nil, '/api/v1/namespaces/kube-system/services/kube-dns'
+              begin
+                res = Net::HTTP.get_response(uri)
+              rescue
+              end
+              if not res.is_a? Net::HTTPSuccess
+                if OS.windows?
+                  run_remote "/opt/bin/kubectl create -f /home/core/dns-configmap.yaml"
+                  run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
+                else
+                  system "kubectl create -f plugins/dns/kube-dns/dns-configmap.yaml"
+                  system "kubectl create -f plugins/dns/kube-dns/dns-service.yaml"
+                end
+              end
+          else if DNS_PROVIDER == "coredns"
+                  res, uri.path = nil, '/api/v1/namespaces/kube-system/deployment/coredns'
+                  begin
+                    res = Net::HTTP.get_response(uri)
+                  rescue
+                  end
+                  if not res.is_a? Net::HTTPSuccess
+                    if OS.windows?
+                      run_remote "/opt/bin/kubectl create -f /home/core/coredns-deployment.yaml"
+                    else
+                      system "kubectl create -f temp/coredns-deployment.yaml"
+                    end
+                  end
+               end
           end
 
           if USE_KUBE_UI
@@ -367,9 +390,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # copy setup files to master vm if host is windows
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
-          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          
+          if DNS_PROVIDER == "kube-dns"
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+          else if DNS_PROVIDER == "coredns"
+                    kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/coredns-deployment.yaml"), :destination => "/home/core/coredns-deployment.yaml"
+               end
+          end
 
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-deployment.yaml"), :destination => "/home/core/dashboard-deployment.yaml"
