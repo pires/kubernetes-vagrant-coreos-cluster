@@ -571,7 +571,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             s.privileged = true
           end
         end
-        kHost.vm.provision :shell, :privileged => true,
+        kHost.vm.provision :shell, run: "always", :privileged => true,
         inline: <<-EOF
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /etc/kubernetes/manifests/*.yaml
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/manifests/*.yaml
