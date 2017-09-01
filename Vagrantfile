@@ -63,7 +63,18 @@ Vagrant.require_version ">= 1.8.6"
 MASTER_YAML = File.join(File.dirname(__FILE__), "master.yaml")
 NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
-CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master.sh")
+# AUTHORIZATION MODE is a setting for enabling or disabling RBAC for your Kubernetes Cluster
+# The default mode is ABAC.
+AUTHORIZATION_MODE = ENV['AUTHORIZATION_MODE'] || 'ABAC'
+
+if AUTHORIZATION_MODE == "RBAC"
+  puts "Using RBAC Mode..."
+  CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master-rbac.sh")
+else
+  puts "Using ABAC Mode..."
+  CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master.sh")
+end
+
 CERTS_MASTER_CONF = File.join(File.dirname(__FILE__), "tls/openssl-master.cnf.tmpl")
 CERTS_NODE_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-node.sh")
 CERTS_NODE_CONF = File.join(File.dirname(__FILE__), "tls/openssl-node.cnf.tmpl")
@@ -78,6 +89,7 @@ DOCKER_OPTIONS = ENV['DOCKER_OPTIONS'] || ''
 KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '1.7.4'
 
 CHANNEL = ENV['CHANNEL'] || 'alpha'
+
 #if CHANNEL != 'alpha'
 #  puts "============================================================================="
 #  puts "As this is a fastly evolving technology CoreOS' alpha channel is the only one"
@@ -249,7 +261,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           if DNS_PROVIDER == "kube-dns"
               # create dns-deployment.yaml file
               dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
-              dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment.yaml.tmpl")
+              if AUTHORIZATION_MODE == "RBAC"
+                puts "Using RBAC Mode..."
+                dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment-rbac.yaml.tmpl")
+              else
+                puts "Using ABAC Mode..."
+                dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment.yaml.tmpl")
+              end
               dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
               # write new setup data to setup file
               File.open(dnsFile, "wb") do |f|
@@ -334,7 +352,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                   run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
                 else
                   system "kubectl create -f plugins/dns/kube-dns/dns-configmap.yaml"
-                  system "kubectl create -f plugins/dns/kube-dns/dns-service.yaml"
+                  # Use service file specific to RBAC
+                  if AUTHORIZATION_MODE == "RBAC"
+                    puts "Using RBAC Mode..."
+                    system "kubectl create -f plugins/dns/kube-dns/dns-service-rbac.yaml"
+                  else
+                    puts "Using ABAC Mode..."  
+                    system "kubectl create -f plugins/dns/kube-dns/dns-service.yaml"
+                  end
                 end
               end
           else if DNS_PROVIDER == "coredns"
@@ -395,6 +420,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
+              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-service-rbac.yaml"), :destination => "/home/core/dns-service-rbac.yaml"
           else if DNS_PROVIDER == "coredns"
                     kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/coredns-deployment.yaml"), :destination => "/home/core/coredns-deployment.yaml"
                end
@@ -561,9 +587,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       # Process Kubernetes manifests, depending on node type
       begin
         if vmName == "master"
-          kHost.vm.provision :shell, run: "always" do |s|
-            s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/master* /etc/kubernetes/manifests"
-            s.privileged = true
+          if AUTHORIZATION_MODE == "RBAC"
+            puts "Using RBAC Mode..."
+            kHost.vm.provision :shell, run: "always" do |s|
+              s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/master* /etc/kubernetes/manifests"
+              s.privileged = true
+            end
+            kHost.vm.provision :shell, run: "always" do |s|
+              s.inline = "rm -rf /etc/kubernetes/manifests/master-apiserver.yaml && mv /etc/kubernetes/manifests/master-apiserver-rbac.yaml /etc/kubernetes/manifests/master-apiserver.yaml"
+              s.privileged = true
+            end            
+          else
+            kHost.vm.provision :shell, run: "always" do |s|
+              s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/master* /etc/kubernetes/manifests"
+              s.privileged = true
+            end
           end
         else
           kHost.vm.provision :shell, run: "always" do |s|
