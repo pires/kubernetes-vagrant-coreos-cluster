@@ -45,6 +45,8 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
+      # Add ServiceAccountName for RBAC authentication.
+      serviceAccountName: kube-dns
       tolerations:
       - key: "CriticalAddonsOnly"
         operator: "Exists"
