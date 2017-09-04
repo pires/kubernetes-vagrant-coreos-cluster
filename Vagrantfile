@@ -65,13 +65,11 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
 # AUTHORIZATION MODE is a setting for enabling or disabling RBAC for your Kubernetes Cluster
 # The default mode is ABAC.
-AUTHORIZATION_MODE = ENV['AUTHORIZATION_MODE'] || 'ABAC'
+AUTHORIZATION_MODE = ENV['AUTHORIZATION_MODE'] || 'AlwaysAllow'
 
 if AUTHORIZATION_MODE == "RBAC"
-  puts "Using RBAC Mode..."
   CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master-rbac.sh")
 else
-  puts "Using ABAC Mode..."
   CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master.sh")
 end
 
@@ -262,10 +260,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               # create dns-deployment.yaml file
               dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
               if AUTHORIZATION_MODE == "RBAC"
-                puts "Using RBAC Mode..."
                 dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment-rbac.yaml.tmpl")
               else
-                puts "Using ABAC Mode..."
                 dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment.yaml.tmpl")
               end
               dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
@@ -354,10 +350,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                   system "kubectl create -f plugins/dns/kube-dns/dns-configmap.yaml"
                   # Use service file specific to RBAC
                   if AUTHORIZATION_MODE == "RBAC"
-                    puts "Using RBAC Mode..."
                     system "kubectl create -f plugins/dns/kube-dns/dns-service-rbac.yaml"
                   else
-                    puts "Using ABAC Mode..."  
                     system "kubectl create -f plugins/dns/kube-dns/dns-service.yaml"
                   end
                 end
@@ -588,15 +582,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       begin
         if vmName == "master"
           if AUTHORIZATION_MODE == "RBAC"
-            puts "Using RBAC Mode..."
             kHost.vm.provision :shell, run: "always" do |s|
-              s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/master* /etc/kubernetes/manifests"
+              s.inline = "mkdir -p /etc/kubernetes/manifests && find /vagrant/manifests/master* ! -name master-apiserver.yaml -exec cp -t /etc/kubernetes/manifests {} +"
               s.privileged = true
             end
-            kHost.vm.provision :shell, run: "always" do |s|
-              s.inline = "rm -rf /etc/kubernetes/manifests/master-apiserver.yaml && mv /etc/kubernetes/manifests/master-apiserver-rbac.yaml /etc/kubernetes/manifests/master-apiserver.yaml"
-              s.privileged = true
-            end            
           else
             kHost.vm.provision :shell, run: "always" do |s|
               s.inline = "mkdir -p /etc/kubernetes/manifests && cp -R /vagrant/manifests/master* /etc/kubernetes/manifests"
