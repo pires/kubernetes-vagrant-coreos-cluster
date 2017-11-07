@@ -505,6 +505,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provider h do |v|
           v.vmx["memsize"] = memory
           v.vmx["numvcpus"] = cpus
+          v.vmx['virtualHW.version'] = 10
         end
       end
       ["parallels", "virtualbox"].each do |h|
