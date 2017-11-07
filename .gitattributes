@@ -1,1 +1,4 @@
 * text=auto
+
+# Force LF line ending on these files
+* eol=lf
