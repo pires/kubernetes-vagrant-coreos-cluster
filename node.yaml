@@ -136,7 +136,6 @@ coreos:
             /hyperkube kubelet \
             --containerized \
             --address=$private_ipv4 \
-            --api-servers=http://__MASTER_IP__:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin= \
             --allow-privileged=true \

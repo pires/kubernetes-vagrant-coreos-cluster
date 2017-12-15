@@ -566,17 +566,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/openssl.cnf
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/openssl.cnf
         EOF
+        kHost.vm.provision :shell, run: "always" do |s|
+          s.inline = "mkdir -p /etc/kubernetes && cp -R /vagrant/tls/master-kubeconfig.yaml /etc/kubernetes/master-kubeconfig.yaml"
+          s.privileged = true
+        end
       else
         kHost.vm.provision :file, :source => "#{CERTS_NODE_SCRIPT}", :destination => "/tmp/make-certs.sh"
         kHost.vm.provision :file, :source => "#{CERTS_NODE_CONF}", :destination => "/tmp/openssl.cnf"
-        kHost.vm.provision :shell, :privileged => true,
-        inline: <<-EOF
-          sed -i"*" "s|__NODE_IP__|#{BASE_IP_ADDR}.#{i+100}|g" /tmp/openssl.cnf
-        EOF
+        kHost.vm.provision :file, :source => "#{CERTS_NODE_CONF}", :destination => "/tmp/openssl.cnf"
         kHost.vm.provision :shell, run: "always" do |s|
           s.inline = "mkdir -p /etc/kubernetes && cp -R /vagrant/tls/node-kubeconfig.yaml /etc/kubernetes/node-kubeconfig.yaml"
           s.privileged = true
         end
+        kHost.vm.provision :shell, :privileged => true,
+        inline: <<-EOF
+          sed -i"*" "s|__NODE_IP__|#{BASE_IP_ADDR}.#{i+100}|g" /tmp/openssl.cnf
+          sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/node-kubeconfig.yaml
+        EOF
       end
 
       # Process Kubernetes manifests, depending on node type

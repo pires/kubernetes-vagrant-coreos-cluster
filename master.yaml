@@ -148,7 +148,6 @@ coreos:
           gcr.io/google_containers/hyperkube-amd64:__RELEASE__ \
             /hyperkube kubelet \
             --address=$private_ipv4 \
-            --api-servers=http://127.0.0.1:8080 \
             --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin= \
             --register-schedulable=false \
@@ -156,7 +155,8 @@ coreos:
             --pod-manifest-path=/etc/kubernetes/manifests \
             --hostname-override=$public_ipv4 \
             --cluster_dns=10.100.0.10 \
-            --cluster_domain=__DNS_DOMAIN__
+            --cluster_domain=__DNS_DOMAIN__ \
+            --kubeconfig=/etc/kubernetes/master-kubeconfig.yaml
         Restart=on-failure
         RestartSec=10
         WorkingDirectory=/root/
