@@ -117,7 +117,7 @@ NODE_CPUS = ENV['NODE_CPUS'] || 2
 
 BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
 
-DNS_PROVIDER = ENV['DNS_PROVIDER'] || "kube-dns"
+DNS_PROVIDER = ENV['DNS_PROVIDER'] || "coredns"
 DNS_DOMAIN = ENV['DNS_DOMAIN'] || "cluster.local"
 
 SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
@@ -255,7 +255,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # give setup file executable permissions
           system "chmod +x temp/setup"
-          
+
           if DNS_PROVIDER == "kube-dns"
               # create dns-deployment.yaml file
               dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
@@ -271,7 +271,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
               end
           else if DNS_PROVIDER == "coredns"
                 system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
-               end 
+               end
           end
         end
 
@@ -322,7 +322,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
 
           info "Configuring Kubernetes DNS..."
-          
+
           if DNS_PROVIDER == "kube-dns"
               res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-dns'
               begin
@@ -409,7 +409,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # copy setup files to master vm if host is windows
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
-          
+
           if DNS_PROVIDER == "kube-dns"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
