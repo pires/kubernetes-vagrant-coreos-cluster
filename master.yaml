@@ -148,7 +148,6 @@ coreos:
           gcr.io/google_containers/hyperkube-amd64:__RELEASE__ \
             /hyperkube kubelet \
             --address=$private_ipv4 \
-            --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin= \
             --register-schedulable=false \
             --allow-privileged=true \

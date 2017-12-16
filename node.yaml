@@ -136,7 +136,6 @@ coreos:
             /hyperkube kubelet \
             --containerized \
             --address=$private_ipv4 \
-            --network-plugin-dir=/etc/kubernetes/cni/net.d \
             --network-plugin= \
             --allow-privileged=true \
             --pod-manifest-path=/etc/kubernetes/manifests \
