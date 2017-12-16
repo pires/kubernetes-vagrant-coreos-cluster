@@ -127,8 +127,8 @@ Most aspects of your cluster setup can be customized with environment variables.
 
  - **KUBERNETES_VERSION** defines the specific kubernetes version being used.
 
-   Defaults to `1.7.11`.
-   Versions prior to `1.7.0` **won't work** with current cloud-config files.
+   Defaults to `1.9.0`.
+   Versions prior to `1.9.0` **may not work** with current cloud-configs and Kubernetes descriptors.
 
  - **USE_KUBE_UI** defines whether to deploy or not the Kubernetes UI
 
