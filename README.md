@@ -219,6 +219,14 @@ error: no objects passed to create
 ```
 You probably have a pre-existing Kubernetes config file on your system at `~/.kube/config`. Delete or move that file and try again.
 
+#### Kubernetes Dashboard asks for either a Kubeconfig or token!
+
+This behavior is expected in latest versions of the Kubernetes Dashboard, since
+different people may need to use the Kubernetes Dashboard with different
+permissions. Since we deploy a service account with
+[administrative privileges](https://github.com/kubernetes/dashboard/wiki/Access-control#admin-privileges)
+you should just click _Skip_. Everything will work as expected.
+
 ## Licensing
 
 This work is [open source](http://opensource.org/osd), and is licensed under the [Apache License, Version 2.0](http://opensource.org/licenses/Apache-2.0).
