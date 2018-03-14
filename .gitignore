@@ -6,3 +6,5 @@
 temp/*
 synced_folders.yaml
 artifacts/*
+agent/secret*
+DD

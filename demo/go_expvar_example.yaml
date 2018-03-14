@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: expvar
+  labels:
+    name: expvar
+    app: demo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: expvar
+      annotations:
+        # ad.datadoghq.com/expvar.check_names: '["go_expvar"]'
+        # ad.datadoghq.com/expvar.init_configs: '[{}]'
+        # ad.datadoghq.com/expvar.instances: '[{"expvar_url":"http://%%host%%:%%port%%/debug/vars"}]'
+    spec:
+      containers:
+        - name: expvar
+          image: hawkular/hawkular-openshift-agent-example-go-expvar
+          ports:
+            - containerPort: 8181
+              name: http
+              protocol: TCP
