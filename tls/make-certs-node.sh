@@ -22,7 +22,7 @@ pem_node_csr=$cert_dir/node-csr.pem
 
 # Generate TLS artifacts
 openssl genrsa -out $pem_node_key 2048
-openssl req -new -key $pem_node_key -out $pem_node_csr -subj "/CN=__NODE_IP__" -config /tmp/openssl.cnf
+openssl req -new -key $pem_node_key -out $pem_node_csr -subj "/CN=__NAME__" -config /tmp/openssl.cnf
 openssl x509 -req -in $pem_node_csr -CA $pem_ca -CAkey $pem_ca_key -CAcreateserial -out $pem_node -days 365 -extensions v3_req -extfile /tmp/openssl.cnf
 
 # Make server certs accessible to apiserver.
