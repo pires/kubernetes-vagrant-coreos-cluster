@@ -166,6 +166,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
     v.functional_vboxsf     = false
+	v.customize ["modifyvm", :id, "--paravirtprovider", "minimal"] # fix freeze "vagrant up" on master: SSH auth method: private key
   end
   config.vm.provider :parallels do |p|
     p.update_guest_tools = false
@@ -270,7 +271,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                 f.write(dnsData)
               end
           else if DNS_PROVIDER == "coredns"
-                system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
+				system "cp #{__dir__}/plugins/dns/coredns/coredns-deployment.yaml #{__dir__}/temp/coredns-deployment.yaml"  # copying a manually compiled file
+				# don't work, why??
+                #system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
                end
           end
         end
@@ -471,6 +474,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provider :virtualbox do |vb, override|
           vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
           vb.customize ["modifyvm", :id, "--uartmode1", serialFile]
+          vb.customize ["modifyvm", :id, "--paravirtprovider", "minimal"]
         end
         # supported since vagrant-parallels 1.3.7
         # https://github.com/Parallels/vagrant-parallels/issues/164
