@@ -322,6 +322,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             system "kubectl config use-context local"
           end
 
+          info "Configuring Calico..."
+
+          if OS.windows?
+            if AUTHORIZATION_MODE == "RBAC"
+              run_remote "/opt/bin/kubectl apply -f /home/core/calico-rbac.yaml"
+            end
+            run_remote "/opt/bin/kubectl apply -f /home/core/calico.yaml"
+          else
+            if AUTHORIZATION_MODE == "RBAC"
+              system "kubectl apply -f plugins/calico/calico-rbac.yaml"
+            end
+            system "kubectl apply -f plugins/calico/calico.yaml"
+          end
+
           info "Configuring Kubernetes DNS..."
 
           if DNS_PROVIDER == "kube-dns"
@@ -396,6 +410,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # copy setup files to master vm if host is windows
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
+
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/calico/calico-rbac.yaml"), :destination => "/home/core/calico-rbac.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/calico/calico.yaml"), :destination => "/home/core/calico.yaml"
 
           if DNS_PROVIDER == "kube-dns"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
