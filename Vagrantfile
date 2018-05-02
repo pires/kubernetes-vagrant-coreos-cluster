@@ -166,6 +166,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
     v.functional_vboxsf     = false
+    v.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
   end
   config.vm.provider :parallels do |p|
     p.update_guest_tools = false
