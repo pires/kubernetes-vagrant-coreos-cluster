@@ -14,6 +14,7 @@ spec:
       - --master=https://__MASTER_IP__:443
       - --kubeconfig=/etc/kubernetes/node-kubeconfig.yaml
       - --proxy-mode=iptables
+      - --cluster-cidr=__CLUSTER_CIDR__
     securityContext:
       privileged: true
     volumeMounts:

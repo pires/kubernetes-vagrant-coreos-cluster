@@ -142,6 +142,10 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to `AlwaysAllow`.
 
+ - **CLUSTER_CIDR** defines the CIDR to be used for pod networking. This CIDR must not overlap with `10.100.0.0/16`.
+
+   Defaults to `10.244.0.0/16`.
+
 So, in order to start, say, a Kubernetes cluster with 3 worker nodes, 4GB of RAM and 4 vCPUs per node one just would run:
 
 ```

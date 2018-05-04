@@ -18,8 +18,6 @@ write-files:
       exit $?
 
 coreos:
-  flannel:
-    interface: $public_ipv4
   units:
     - name: rpcbind.service
       enable: true
@@ -50,15 +48,6 @@ coreos:
             --initial-cluster __ETCD_SEED_CLUSTER__
         [Install]
         WantedBy=multi-user.target
-    - name: flanneld.service
-      command: start
-      drop-ins:
-        - name: 50-network-config.conf
-          content: |
-            [Unit]
-            Requires=etcd-member.service
-            [Service]
-            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{"Network":"10.244.0.0/16", "Backend": {"Type": "host-gw"}}'
     - name: docker.service
       command: start
       drop-ins:
@@ -67,11 +56,6 @@ coreos:
           __PROXY_LINE__content: |
             __PROXY_LINE__[Service]
             __PROXY_LINE__EnvironmentFile=/etc/environment
-        - name: 40-flannel.conf
-          content: |
-            [Unit]
-            Requires=flanneld.service
-            After=flanneld.service
         - name: 50-docker-options.conf
           content: |
             [Service]
@@ -136,9 +120,12 @@ coreos:
         ExecStart=/usr/bin/docker run \
           --volume=/:/rootfs:ro \
           --volume=/sys:/sys:ro \
+          --volume=/etc/cni/net.d:/etc/cni/net.d:rw \
+          --volume=/opt/cni/bin:/opt/cni/bin:rw \
           --volume=/etc/kubernetes:/etc/kubernetes:ro \
+          --volume=/var/lib/calico/:/var/lib/calico:rw \
           --volume=/var/lib/docker/:/var/lib/docker:rw \
-          --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
+          --volume=/var/lib/kubelet/:/var/lib/kubelet:shared \
           --volume=/var/run:/var/run:rw \
           --net=host \
           --pid=host \
@@ -147,15 +134,17 @@ coreos:
           -d \
           gcr.io/google_containers/hyperkube-amd64:__RELEASE__ \
             /hyperkube kubelet \
+            --containerized \
             --address=$private_ipv4 \
-            --network-plugin= \
             --register-schedulable=false \
             --allow-privileged=true \
             --pod-manifest-path=/etc/kubernetes/manifests \
             --hostname-override=$public_ipv4 \
             --cluster_dns=10.100.0.10 \
             --cluster_domain=__DNS_DOMAIN__ \
-            --kubeconfig=/etc/kubernetes/master-kubeconfig.yaml
+            --kubeconfig=/etc/kubernetes/master-kubeconfig.yaml \
+            --network-plugin=cni \
+            --pod-cidr=__CLUSTER_CIDR__
         Restart=on-failure
         RestartSec=10
         WorkingDirectory=/root/

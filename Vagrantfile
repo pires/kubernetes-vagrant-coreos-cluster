@@ -138,6 +138,9 @@ REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BE
 # Read YAML file with mountpoint details
 MOUNT_POINTS = YAML::load_file(File.join(File.dirname(__FILE__), "synced_folders.yaml"))
 
+# CLUSTER_CIDR is the CIDR used for pod networking
+CLUSTER_CIDR = ENV['CLUSTER_CIDR'] || "10.244.0.0/16"
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use host timezone in VMs
   config.timezone.value = :host
@@ -166,6 +169,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
     v.functional_vboxsf     = false
+    v.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
   end
   config.vm.provider :parallels do |p|
     p.update_guest_tools = false
@@ -321,6 +325,28 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             system "kubectl config use-context local"
           end
 
+          info "Configuring Calico..."
+
+          # Replace __CLUSTER_CIDR__ in calico.yaml.tmpl with the value of CLUSTER_CIDR
+          calicoTmpl = File.read("#{__dir__}/plugins/calico/calico.yaml.tmpl")
+          calicoTmpl = calicoTmpl.gsub("__CLUSTER_CIDR__", CLUSTER_CIDR);
+          File.open("#{__dir__}/temp/calico.yaml", "wb") do |f|
+            f.write(calicoTmpl)
+          end
+
+          # Install Calico
+          if OS.windows?
+            if AUTHORIZATION_MODE == "RBAC"
+              run_remote "/opt/bin/kubectl apply -f /home/core/calico-rbac.yaml"
+            end
+            run_remote "/opt/bin/kubectl apply -f /home/core/calico.yaml"
+          else
+            if AUTHORIZATION_MODE == "RBAC"
+              system "kubectl apply -f plugins/calico/calico-rbac.yaml"
+            end
+            system "kubectl apply -f temp/calico.yaml"
+          end
+
           info "Configuring Kubernetes DNS..."
 
           if DNS_PROVIDER == "kube-dns"
@@ -395,6 +421,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # copy setup files to master vm if host is windows
         if OS.windows?
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/setup"), :destination => "/home/core/kubectlsetup"
+
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/calico/calico-rbac.yaml"), :destination => "/home/core/calico-rbac.yaml"
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/calico.yaml"), :destination => "/home/core/calico.yaml"
 
           if DNS_PROVIDER == "kube-dns"
               kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
@@ -596,6 +625,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /etc/kubernetes/manifests/*.yaml
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/manifests/*.yaml
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /etc/kubernetes/manifests/*.yaml
+          sed -i"*" "s|__CLUSTER_CIDR__|#{CLUSTER_CIDR}|g" /etc/kubernetes/manifests/*.yaml
         EOF
       end
 
@@ -621,6 +651,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__ETCD_SEED_CLUSTER__|#{ETCD_SEED_CLUSTER}|g" /tmp/vagrantfile-user-data
+          sed -i"*" "s|__CLUSTER_CIDR__|#{CLUSTER_CIDR}|g" /tmp/vagrantfile-user-data
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end

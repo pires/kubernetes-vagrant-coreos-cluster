@@ -16,6 +16,8 @@ spec:
       - --root-ca-file=/etc/kubernetes/ssl/ca.pem
       - --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem
       - --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem
+      - --cluster-cidr=__CLUSTER_CIDR__
+      - --allocate-node-cidrs=true
     livenessProbe:
       httpGet:
         host: 127.0.0.1
