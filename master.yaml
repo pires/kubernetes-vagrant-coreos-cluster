@@ -144,7 +144,7 @@ coreos:
             --cluster_domain=__DNS_DOMAIN__ \
             --kubeconfig=/etc/kubernetes/master-kubeconfig.yaml \
             --network-plugin=cni \
-            --pod-cidr=192.168.0.0/16
+            --pod-cidr=__CLUSTER_CIDR__
         Restart=on-failure
         RestartSec=10
         WorkingDirectory=/root/

@@ -13,7 +13,7 @@ spec:
       - proxy
       - --master=http://__MASTER_IP__:8080
       - --proxy-mode=iptables
-      - --cluster-cidr=192.168.0.0/16
+      - --cluster-cidr=__CLUSTER_CIDR__
     securityContext:
       privileged: true
     volumeMounts:

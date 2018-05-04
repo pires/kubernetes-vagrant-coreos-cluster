@@ -132,7 +132,7 @@ coreos:
             --tls-cert-file=/etc/kubernetes/ssl/node.pem \
             --tls-private-key-file=/etc/kubernetes/ssl/node-key.pem \
             --network-plugin=cni \
-            --pod-cidr=192.168.0.0/16
+            --pod-cidr=__CLUSTER_CIDR__
         Restart=on-failure
         RestartSec=10
         WorkingDirectory=/root/
