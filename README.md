@@ -1,13 +1,13 @@
 # kubernetes-vagrant-coreos-cluster
 Turnkey **[Kubernetes](https://github.com/GoogleCloudPlatform/kubernetes)**
-cluster setup with **[Vagrant 1.8,6+](https://www.vagrantup.com)** and
+cluster setup with **[Vagrant 2.1.1+](https://www.vagrantup.com)** and
 **[CoreOS](https://coreos.com)**.
 
 If you're lazy, or in a hurry, jump to the [TL;DR](#tldr) section.
 
 ## Pre-requisites
 
- * **[Vagrant 1.8.6+](https://www.vagrantup.com)**
+ * **[Vagrant 2.1.1+](https://www.vagrantup.com)**
  * a supported Vagrant hypervisor:
  	* **[Virtualbox](https://www.virtualbox.org)** (the default)
  	* **[Parallels Desktop](http://www.parallels.com/eu/products/desktop/)**
@@ -212,6 +212,37 @@ you need to get a scalable Elasticsearch cluster on top of Kubernetes in no
 time.
 
 ## Troubleshooting
+
+#### Vagrant displays a warning message when running!
+
+Vagrant 2.1 integrated support for triggers as a core functionality. However,
+this change is not compatible with the
+[`vagrant-triggers`](https://github.com/emyl/vagrant-triggers) community plugin
+we were and still are using. Since we require this plugin, Vagrant will show the
+following warning:
+
+```
+WARNING: Vagrant has detected the `vagrant-triggers` plugin. This plugin conflicts
+with the internal triggers implementation. Please uninstall the `vagrant-triggers`
+plugin and run the command again if you wish to use the core trigger feature. To
+uninstall the plugin, run the command shown below:
+
+  vagrant plugin uninstall vagrant-triggers
+
+Note that the community plugin `vagrant-triggers` and the core trigger feature
+in Vagrant do not have compatible syntax.
+
+To disable this warning, set the environment variable `VAGRANT_USE_VAGRANT_TRIGGERS`.
+```
+
+This warning is harmless and only means that we are using the community plugin
+instead of the core functionality. To disable it, set the
+`VAGRANT_USE_VAGRANT_TRIGGERS` environment variable to `false` before running
+`vagrant`:
+
+```
+$ VAGRANT_USE_VAGRANT_TRIGGERS=false NODES=2 vagrant up
+```
 
 #### I'm getting errors while waiting for Kubernetes master to become ready on a MacOS host!
 
