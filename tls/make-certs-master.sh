@@ -37,5 +37,5 @@ cp $pem_ca $pem_ca_key /vagrant/artifacts/tls
 
 # Generate admin
 openssl genrsa -out $pem_admin_key 2048
-openssl req -new -key $pem_admin_key -out $pem_admin_csr -subj "/CN=kube-admin"
+openssl req -new -key $pem_admin_key -out $pem_admin_csr -subj "/CN=kube-admin/O=system:masters"
 openssl x509 -req -in $pem_admin_csr -CA $pem_ca -CAkey $pem_ca_key -CAcreateserial -out $pem_admin -days 365
