@@ -32,7 +32,7 @@ coreos:
         Description=etcd
         Documentation=https://github.com/coreos/etcd
         [Service]
-        Environment='ETCD_IMAGE_TAG=v3.1.8'
+        Environment='ETCD_IMAGE_TAG=v3.3.4'
         Environment='ETCD_DATA_DIR=/var/lib/etcd'
         Environment='ETCD_USER=etcd'
         Type=notify
