@@ -134,10 +134,6 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to `false`.
 
- - **DNS_PROVIDER** defines which DNS provider to use. Options are: `kube-dns` and `coredns`.
-
-   Defaults to `coredns`.
-
  - **AUTHORIZATION_MODE** setting this to `RBAC` enables RBAC for the kubernetes cluster.
 
    Defaults to `AlwaysAllow`.

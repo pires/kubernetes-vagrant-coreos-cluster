@@ -1,12 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-require 'fileutils'
-require 'net/http'
-require 'open-uri'
-require 'json'
-require 'date'
-require 'pathname'
+require "fileutils"
+require "net/http"
+require "open-uri"
+require "json"
+require "date"
+require "pathname"
 
 class Module
   def redefine_const(name, value)
@@ -21,7 +21,7 @@ module OS
   end
 
   def OS.mac?
-   (/darwin/ =~ RUBY_PLATFORM) != nil
+    (/darwin/ =~ RUBY_PLATFORM) != nil
   end
 
   def OS.unix?
@@ -36,16 +36,16 @@ end
 required_plugins = %w(vagrant-triggers)
 
 # check either 'http_proxy' or 'HTTP_PROXY' environment variable
-enable_proxy = !(ENV['HTTP_PROXY'] || ENV['http_proxy'] || '').empty?
+enable_proxy = !(ENV["HTTP_PROXY"] || ENV["http_proxy"] || "").empty?
 if enable_proxy
-  required_plugins.push('vagrant-proxyconf')
+  required_plugins.push("vagrant-proxyconf")
 end
 
 if OS.windows?
-  required_plugins.push('vagrant-winnfsd')
+  required_plugins.push("vagrant-winnfsd")
 end
 
-required_plugins.push('vagrant-timezone')
+required_plugins.push("vagrant-timezone")
 
 required_plugins.each do |plugin|
   need_restart = false
@@ -53,7 +53,7 @@ required_plugins.each do |plugin|
     system "vagrant plugin install #{plugin}"
     need_restart = true
   end
-  exec "vagrant #{ARGV.join(' ')}" if need_restart
+  exec "vagrant #{ARGV.join(" ")}" if need_restart
 end
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
@@ -65,7 +65,7 @@ NODE_YAML = File.join(File.dirname(__FILE__), "node.yaml")
 
 # AUTHORIZATION MODE is a setting for enabling or disabling RBAC for your Kubernetes Cluster
 # The default mode is ABAC.
-AUTHORIZATION_MODE = ENV['AUTHORIZATION_MODE'] || 'AlwaysAllow'
+AUTHORIZATION_MODE = ENV["AUTHORIZATION_MODE"] || "AlwaysAllow"
 
 if AUTHORIZATION_MODE == "RBAC"
   CERTS_MASTER_SCRIPT = File.join(File.dirname(__FILE__), "tls/make-certs-master-rbac.sh")
@@ -79,14 +79,14 @@ CERTS_NODE_CONF = File.join(File.dirname(__FILE__), "tls/openssl-node.cnf.tmpl")
 
 MANIFESTS_DIR = Pathname.getwd().join("manifests")
 
-USE_DOCKERCFG = ENV['USE_DOCKERCFG'] || false
-DOCKERCFG = File.expand_path(ENV['DOCKERCFG'] || "~/.dockercfg")
+USE_DOCKERCFG = ENV["USE_DOCKERCFG"] || false
+DOCKERCFG = File.expand_path(ENV["DOCKERCFG"] || "~/.dockercfg")
 
-DOCKER_OPTIONS = ENV['DOCKER_OPTIONS'] || ''
+DOCKER_OPTIONS = ENV["DOCKER_OPTIONS"] || ""
 
-KUBERNETES_VERSION = ENV['KUBERNETES_VERSION'] || '1.10.2'
+KUBERNETES_VERSION = ENV["KUBERNETES_VERSION"] || "1.10.2"
 
-CHANNEL = ENV['CHANNEL'] || 'alpha'
+CHANNEL = ENV["CHANNEL"] || "alpha"
 
 #if CHANNEL != 'alpha'
 #  puts "============================================================================="
@@ -98,48 +98,47 @@ CHANNEL = ENV['CHANNEL'] || 'alpha'
 #  puts "============================================================================="
 #end
 
-COREOS_VERSION = ENV['COREOS_VERSION'] || 'latest'
+COREOS_VERSION = ENV["COREOS_VERSION"] || "latest"
 upstream = "http://#{CHANNEL}.release.core-os.net/amd64-usr/#{COREOS_VERSION}"
 if COREOS_VERSION == "latest"
   upstream = "http://#{CHANNEL}.release.core-os.net/amd64-usr/current"
   url = "#{upstream}/version.txt"
   Object.redefine_const(:COREOS_VERSION,
-    open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub('COREOS_VERSION=', ''))
+                        open(url).read().scan(/COREOS_VERSION=.*/)[0].gsub("COREOS_VERSION=", ""))
 end
 
-NODES = ENV['NODES'] || 2
+NODES = ENV["NODES"] || 2
 
-MASTER_MEM = ENV['MASTER_MEM'] || 1024
-MASTER_CPUS = ENV['MASTER_CPUS'] || 2
+MASTER_MEM = ENV["MASTER_MEM"] || 1024
+MASTER_CPUS = ENV["MASTER_CPUS"] || 2
 
-NODE_MEM= ENV['NODE_MEM'] || 2048
-NODE_CPUS = ENV['NODE_CPUS'] || 2
+NODE_MEM = ENV["NODE_MEM"] || 2048
+NODE_CPUS = ENV["NODE_CPUS"] || 2
 
-BASE_IP_ADDR = ENV['BASE_IP_ADDR'] || "172.17.8"
+BASE_IP_ADDR = ENV["BASE_IP_ADDR"] || "172.17.8"
 
-DNS_PROVIDER = ENV['DNS_PROVIDER'] || "coredns"
-DNS_DOMAIN = ENV['DNS_DOMAIN'] || "cluster.local"
+DNS_DOMAIN = ENV["DNS_DOMAIN"] || "cluster.local"
 
-SERIAL_LOGGING = (ENV['SERIAL_LOGGING'].to_s.downcase == 'true')
-GUI = (ENV['GUI'].to_s.downcase == 'true')
-USE_KUBE_UI = ENV['USE_KUBE_UI'] || false
+SERIAL_LOGGING = (ENV["SERIAL_LOGGING"].to_s.downcase == "true")
+GUI = (ENV["GUI"].to_s.downcase == "true")
+USE_KUBE_UI = ENV["USE_KUBE_UI"] || false
 
-BOX_TIMEOUT_COUNT = ENV['BOX_TIMEOUT_COUNT'] || 50
+BOX_TIMEOUT_COUNT = ENV["BOX_TIMEOUT_COUNT"] || 50
 
 if enable_proxy
-  HTTP_PROXY = ENV['HTTP_PROXY'] || ENV['http_proxy']
-  HTTPS_PROXY = ENV['HTTPS_PROXY'] || ENV['https_proxy']
-  NO_PROXY = ENV['NO_PROXY'] || ENV['no_proxy'] || "localhost"
+  HTTP_PROXY = ENV["HTTP_PROXY"] || ENV["http_proxy"]
+  HTTPS_PROXY = ENV["HTTPS_PROXY"] || ENV["https_proxy"]
+  NO_PROXY = ENV["NO_PROXY"] || ENV["no_proxy"] || "localhost"
 end
 
-REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV['REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT'].to_s.downcase == 'true')
+REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT = (ENV["REMOVE_VAGRANTFILE_USER_DATA_BEFORE_HALT"].to_s.downcase == "true")
 # if this is set true, remember to use --provision when executing vagrant up / reload
 
 # Read YAML file with mountpoint details
 MOUNT_POINTS = YAML::load_file(File.join(File.dirname(__FILE__), "synced_folders.yaml"))
 
 # CLUSTER_CIDR is the CIDR used for pod networking
-CLUSTER_CIDR = ENV['CLUSTER_CIDR'] || "10.244.0.0/16"
+CLUSTER_CIDR = ENV["CLUSTER_CIDR"] || "10.244.0.0/16"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # always use host timezone in VMs
@@ -168,7 +167,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # On VirtualBox, we don't have guest additions or a functional vboxsf
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
-    v.functional_vboxsf     = false
+    v.functional_vboxsf = false
     v.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
   end
   config.vm.provider :parallels do |p|
@@ -177,7 +176,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   # plugin conflict
-  if Vagrant.has_plugin?("vagrant-vbguest") then
+  if Vagrant.has_plugin?("vagrant-vbguest")
     config.vbguest.auto_update = false
   end
 
@@ -189,24 +188,24 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # thus adding each node one by one to no_proxy
     no_proxies = NO_PROXY.split(",")
     (1..(NODES.to_i + 1)).each do |i|
-      vm_ip_addr = "#{BASE_IP_ADDR}.#{i+100}"
+      vm_ip_addr = "#{BASE_IP_ADDR}.#{i + 100}"
       Object.redefine_const(:NO_PROXY,
-        "#{NO_PROXY},#{vm_ip_addr}") unless no_proxies.include?(vm_ip_addr)
+                            "#{NO_PROXY},#{vm_ip_addr}") unless no_proxies.include?(vm_ip_addr)
     end
     config.proxy.no_proxy = NO_PROXY
     # proxyconf plugin use wrong approach to set Docker proxy for CoreOS
     # force proxyconf to skip Docker proxy setup
-    config.proxy.enabled = { docker: false }
+    config.proxy.enabled = {docker: false}
   end
 
   (1..(NODES.to_i + 1)).each do |i|
     if i == 1
       hostname = "master"
-      ETCD_SEED_CLUSTER = "#{hostname}=http://#{BASE_IP_ADDR}.#{i+100}:2380"
+      ETCD_SEED_CLUSTER = "#{hostname}=http://#{BASE_IP_ADDR}.#{i + 100}:2380"
       cfg = MASTER_YAML
       memory = MASTER_MEM
       cpus = MASTER_CPUS
-      MASTER_IP="#{BASE_IP_ADDR}.#{i+100}"
+      MASTER_IP = "#{BASE_IP_ADDR}.#{i + 100}"
     else
       hostname = "node-%02d" % (i - 1)
       cfg = NODE_YAML
@@ -242,15 +241,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           setupFile = "#{__dir__}/temp/setup"
           # find and replace kubernetes version and master IP in setup file
           setupData = File.read("setup.tmpl")
-          setupData = setupData.gsub("__KUBERNETES_VERSION__", KUBERNETES_VERSION);
-          setupData = setupData.gsub("__MASTER_IP__", MASTER_IP);
+          setupData = setupData.gsub("__KUBERNETES_VERSION__", KUBERNETES_VERSION)
+          setupData = setupData.gsub("__MASTER_IP__", MASTER_IP)
           if enable_proxy
             # remove __PROXY_LINE__ flag and set __NO_PROXY__
-            setupData = setupData.gsub("__PROXY_LINE__", "");
-            setupData = setupData.gsub("__NO_PROXY__", NO_PROXY);
+            setupData = setupData.gsub("__PROXY_LINE__", "")
+            setupData = setupData.gsub("__NO_PROXY__", NO_PROXY)
           else
             # remove lines that start with __PROXY_LINE__
-            setupData = setupData.gsub(/^\s*__PROXY_LINE__.*$\n/, "");
+            setupData = setupData.gsub(/^\s*__PROXY_LINE__.*$\n/, "")
           end
           # write new setup data to setup file
           File.open(setupFile, "wb") do |f|
@@ -260,23 +259,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           # give setup file executable permissions
           system "chmod +x temp/setup"
 
-          if DNS_PROVIDER == "kube-dns"
-              # create dns-deployment.yaml file
-              dnsFile = "#{__dir__}/temp/dns-deployment.yaml"
-              if AUTHORIZATION_MODE == "RBAC"
-                dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment-rbac.yaml.tmpl")
-              else
-                dnsData = File.read("#{__dir__}/plugins/dns/kube-dns/dns-deployment.yaml.tmpl")
-              end
-              dnsData = dnsData.gsub("__DNS_DOMAIN__", DNS_DOMAIN);
-              # write new setup data to setup file
-              File.open(dnsFile, "wb") do |f|
-                f.write(dnsData)
-              end
-          else if DNS_PROVIDER == "coredns"
-                system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
-               end
-          end
+          system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
         end
 
         kHost.trigger.after [:up, :resume] do
@@ -329,7 +312,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           # Replace __CLUSTER_CIDR__ in calico.yaml.tmpl with the value of CLUSTER_CIDR
           calicoTmpl = File.read("#{__dir__}/plugins/calico/calico.yaml.tmpl")
-          calicoTmpl = calicoTmpl.gsub("__CLUSTER_CIDR__", CLUSTER_CIDR);
+          calicoTmpl = calicoTmpl.gsub("__CLUSTER_CIDR__", CLUSTER_CIDR)
           File.open("#{__dir__}/temp/calico.yaml", "wb") do |f|
             f.write(calicoTmpl)
           end
@@ -349,53 +332,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
           info "Configuring Kubernetes DNS..."
 
-          if DNS_PROVIDER == "kube-dns"
-              res, uri.path = nil, '/api/v1/namespaces/kube-system/replicationcontrollers/kube-dns'
-              begin
-                res = Net::HTTP.get_response(uri)
-              rescue
-              end
-              if not res.is_a? Net::HTTPSuccess
-                if OS.windows?
-                  run_remote "/opt/bin/kubectl create -f /home/core/dns-deployment.yaml"
-                else
-                  system "kubectl create -f temp/dns-deployment.yaml"
-                end
-              end
-
-              res, uri.path = nil, '/api/v1/namespaces/kube-system/services/kube-dns'
-              begin
-                res = Net::HTTP.get_response(uri)
-              rescue
-              end
-              if not res.is_a? Net::HTTPSuccess
-                if OS.windows?
-                  run_remote "/opt/bin/kubectl create -f /home/core/dns-configmap.yaml"
-                  run_remote "/opt/bin/kubectl create -f /home/core/dns-service.yaml"
-                else
-                  system "kubectl create -f plugins/dns/kube-dns/dns-configmap.yaml"
-                  # Use service file specific to RBAC
-                  if AUTHORIZATION_MODE == "RBAC"
-                    system "kubectl create -f plugins/dns/kube-dns/dns-service-rbac.yaml"
-                  else
-                    system "kubectl create -f plugins/dns/kube-dns/dns-service.yaml"
-                  end
-                end
-              end
-          else if DNS_PROVIDER == "coredns"
-                  res, uri.path = nil, '/api/v1/namespaces/kube-system/deployment/coredns'
-                  begin
-                    res = Net::HTTP.get_response(uri)
-                  rescue
-                  end
-                  if not res.is_a? Net::HTTPSuccess
-                    if OS.windows?
-                      run_remote "/opt/bin/kubectl create -f /home/core/coredns-deployment.yaml"
-                    else
-                      system "kubectl create -f temp/coredns-deployment.yaml"
-                    end
-                  end
-               end
+          res, uri.path = nil, "/api/v1/namespaces/kube-system/deployment/coredns"
+          begin
+            res = Net::HTTP.get_response(uri)
+          rescue
+          end
+          if not res.is_a? Net::HTTPSuccess
+            if OS.windows?
+              run_remote "/opt/bin/kubectl create -f /home/core/coredns-deployment.yaml"
+            else
+              system "kubectl create -f temp/coredns-deployment.yaml"
+            end
           end
 
           if USE_KUBE_UI
@@ -415,7 +362,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
             info "Kubernetes Dashboard will be available at http://#{MASTER_IP}:8080/ui/"
           end
-
         end
 
         # copy setup files to master vm if host is windows
@@ -425,15 +371,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/calico/calico-rbac.yaml"), :destination => "/home/core/calico-rbac.yaml"
           kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/calico.yaml"), :destination => "/home/core/calico.yaml"
 
-          if DNS_PROVIDER == "kube-dns"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-configmap.yaml"), :destination => "/home/core/dns-configmap.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/dns-deployment.yaml"), :destination => "/home/core/dns-deployment.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-service.yaml"), :destination => "/home/core/dns-service.yaml"
-              kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dns/kube-dns/dns-service-rbac.yaml"), :destination => "/home/core/dns-service-rbac.yaml"
-          else if DNS_PROVIDER == "coredns"
-                    kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/coredns-deployment.yaml"), :destination => "/home/core/coredns-deployment.yaml"
-               end
-          end
+          kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "temp/coredns-deployment.yaml"), :destination => "/home/core/coredns-deployment.yaml"
 
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-rbac.yaml"), :destination => "/home/core/dashboard-rbac.yaml"
@@ -454,8 +392,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
 
         kHost.trigger.after [:up] do
-          info "Waiting for Kubernetes minion [node-%02d" % (i - 1) + "] to become ready..."
-          j, uri, hasResponse = 0, URI("http://#{BASE_IP_ADDR}.#{i+100}:10250"), false
+          info "Waiting for Kubernetes worker [node-%02d" % (i - 1) + "] to become ready..."
+          j, uri, hasResponse = 0, URI("http://#{BASE_IP_ADDR}.#{i + 100}:10250"), false
           loop do
             j += 1
             begin
@@ -505,9 +443,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         # https://github.com/Parallels/vagrant-parallels/issues/164
         kHost.vm.provider :parallels do |v|
           v.customize("post-import",
-            ["set", :id, "--device-add", "serial", "--output", serialFile])
+                      ["set", :id, "--device-add", "serial", "--output", serialFile])
           v.customize("pre-boot",
-            ["set", :id, "--device-set", "serial0", "--output", serialFile])
+                      ["set", :id, "--device-set", "serial0", "--output", serialFile])
         end
       end
 
@@ -520,7 +458,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provider h do |v|
           v.vmx["memsize"] = memory
           v.vmx["numvcpus"] = cpus
-          v.vmx['virtualHW.version'] = 10
+          v.vmx["virtualHW.version"] = 10
         end
       end
       ["parallels", "virtualbox"].each do |h|
@@ -530,7 +468,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         end
       end
 
-      kHost.vm.network :private_network, ip: "#{BASE_IP_ADDR}.#{i+100}"
+      kHost.vm.network :private_network, ip: "#{BASE_IP_ADDR}.#{i + 100}"
 
       # you can override this in synced_folders.yaml
       kHost.vm.synced_folder ".", "/vagrant", disabled: true
@@ -539,20 +477,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         MOUNT_POINTS.each do |mount|
           mount_options = ""
           disabled = false
-          nfs =  true
-          if mount['mount_options']
-            mount_options = mount['mount_options']
+          nfs = true
+          if mount["mount_options"]
+            mount_options = mount["mount_options"]
           end
-          if mount['disabled']
-            disabled = mount['disabled']
+          if mount["disabled"]
+            disabled = mount["disabled"]
           end
-          if mount['nfs']
-            nfs = mount['nfs']
+          if mount["nfs"]
+            nfs = mount["nfs"]
           end
-          if File.exist?(File.expand_path("#{mount['source']}"))
-            if mount['destination']
-              kHost.vm.synced_folder "#{mount['source']}", "#{mount['destination']}",
-                id: "#{mount['name']}",
+          if File.exist?(File.expand_path("#{mount["source"]}"))
+            if mount["destination"]
+              kHost.vm.synced_folder "#{mount["source"]}", "#{mount["destination"]}",
+                id: "#{mount["name"]}",
                 disabled: disabled,
                 mount_options: ["#{mount_options}"],
                 nfs: nfs
@@ -564,7 +502,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       if USE_DOCKERCFG && File.exist?(DOCKERCFG)
         kHost.vm.provision :file, run: "always",
-         :source => "#{DOCKERCFG}", :destination => "/home/core/.dockercfg"
+                                  :source => "#{DOCKERCFG}", :destination => "/home/core/.dockercfg"
 
         kHost.vm.provision :shell, run: "always" do |s|
           s.inline = "cp /home/core/.dockercfg /root/.dockercfg"
@@ -577,7 +515,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provision :file, :source => "#{CERTS_MASTER_SCRIPT}", :destination => "/tmp/make-certs.sh"
         kHost.vm.provision :file, :source => "#{CERTS_MASTER_CONF}", :destination => "/tmp/openssl.cnf"
         kHost.vm.provision :shell, :privileged => true,
-        inline: <<-EOF
+                                   inline: <<-EOF
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /tmp/openssl.cnf
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /tmp/openssl.cnf
         EOF
@@ -594,8 +532,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           s.privileged = true
         end
         kHost.vm.provision :shell, :privileged => true,
-        inline: <<-EOF
-          sed -i"*" "s|__NODE_IP__|#{BASE_IP_ADDR}.#{i+100}|g" /tmp/openssl.cnf
+                                   inline: <<-EOF
+          sed -i"*" "s|__NODE_IP__|#{BASE_IP_ADDR}.#{i + 100}|g" /tmp/openssl.cnf
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/node-kubeconfig.yaml
         EOF
       end
@@ -621,7 +559,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
         end
         kHost.vm.provision :shell, run: "always", :privileged => true,
-        inline: <<-EOF
+                                   inline: <<-EOF
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /etc/kubernetes/manifests/*.yaml
           sed -i"*" "s|__MASTER_IP__|#{MASTER_IP}|g" /etc/kubernetes/manifests/*.yaml
           sed -i"*" "s|__DNS_DOMAIN__|#{DNS_DOMAIN}|g" /etc/kubernetes/manifests/*.yaml
@@ -634,7 +572,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kHost.vm.provision :file, :source => "#{cfg}", :destination => "/tmp/vagrantfile-user-data"
         if enable_proxy
           kHost.vm.provision :shell, :privileged => true,
-          inline: <<-EOF
+                                     inline: <<-EOF
           sed -i"*" "s|__PROXY_LINE__||g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__HTTP_PROXY__|#{HTTP_PROXY}|g" /tmp/vagrantfile-user-data
           sed -i"*" "s|__HTTPS_PROXY__|#{HTTPS_PROXY}|g" /tmp/vagrantfile-user-data
@@ -642,7 +580,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           EOF
         end
         kHost.vm.provision :shell, :privileged => true,
-        inline: <<-EOF
+                                   inline: <<-EOF
           sed -i"*" "/__PROXY_LINE__/d" /tmp/vagrantfile-user-data
           sed -i"*" "s,__DOCKER_OPTIONS__,#{DOCKER_OPTIONS},g" /tmp/vagrantfile-user-data
           sed -i"*" "s,__RELEASE__,v#{KUBERNETES_VERSION},g" /tmp/vagrantfile-user-data
@@ -655,7 +593,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/
         EOF
       end
-
     end
   end
 end
