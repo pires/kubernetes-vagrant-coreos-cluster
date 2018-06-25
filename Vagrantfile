@@ -260,6 +260,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           system "chmod +x temp/setup"
 
           system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
+
+          # Replace __CLUSTER_CIDR__ in calico.yaml.tmpl with the value of CLUSTER_CIDR
+          calicoTmpl = File.read("#{__dir__}/plugins/calico/calico.yaml.tmpl")
+          calicoTmpl = calicoTmpl.gsub("__CLUSTER_CIDR__", CLUSTER_CIDR)
+          File.open("#{__dir__}/temp/calico.yaml", "wb") do |f|
+            f.write(calicoTmpl)
+          end
         end
 
         kHost.trigger.after [:up, :resume] do
@@ -309,13 +316,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           end
 
           info "Configuring Calico..."
-
-          # Replace __CLUSTER_CIDR__ in calico.yaml.tmpl with the value of CLUSTER_CIDR
-          calicoTmpl = File.read("#{__dir__}/plugins/calico/calico.yaml.tmpl")
-          calicoTmpl = calicoTmpl.gsub("__CLUSTER_CIDR__", CLUSTER_CIDR)
-          File.open("#{__dir__}/temp/calico.yaml", "wb") do |f|
-            f.write(calicoTmpl)
-          end
 
           # Install Calico
           if OS.windows?
