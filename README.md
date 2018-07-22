@@ -91,7 +91,7 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to **$HTTP_PROXY of host machine if it exists**.   
 
-   You need customing this proxy setting on VMs when you have to face gfw with tools like shadowsocks, privoxy on host machine, because Vagrantfile uses proxy setting on host machine default,these settings might be not right to VMs,  it would lead to internet disconnection of VMs. If you have the problem, you can refer to https://www.linuxbabe.com/virtualbox/how-to-access-host-services-from-a-virtualbox-guest-os
+   You need customing this proxy setting on VMs when you have to face gfw with tools like shadowsocks, privoxy on host machine, because Vagrantfile uses proxy setting on host machine default,this setting might be not right to VMs,  it would lead to internet disconnection of VMs. If you have the problem, you can refer to https://www.linuxbabe.com/virtualbox/how-to-access-host-services-from-a-virtualbox-guest-os for customing this setting.
 
   - **HTTPS_PROXY**  
   
