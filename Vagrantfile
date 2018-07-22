@@ -50,7 +50,7 @@ required_plugins.push("vagrant-timezone")
 required_plugins.each do |plugin|
   need_restart = false
   unless Vagrant.has_plugin? plugin
-    system "vagrant plugin install #{plugin}"
+    system("vagrant plugin install #{plugin}", :chdir=>"/tmp") || exit!
     need_restart = true
   end
   exec "vagrant #{ARGV.join(" ")}" if need_restart
@@ -124,6 +124,7 @@ GUI = (ENV["GUI"].to_s.downcase == "true")
 USE_KUBE_UI = ENV["USE_KUBE_UI"] || false
 
 BOX_TIMEOUT_COUNT = ENV["BOX_TIMEOUT_COUNT"] || 50
+BOX_TIMEOUT_COUNT = BOX_TIMEOUT_COUNT.to_i
 
 if enable_proxy
   HTTP_PROXY = ENV["HTTP_PROXY"] || ENV["http_proxy"]
