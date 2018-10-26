@@ -24,6 +24,13 @@ spec:
       - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
       - --client-ca-file=/etc/kubernetes/ssl/ca.pem
       - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+      - --proxy-client-cert-file=/etc/kubernetes/ssl/apiserver.pem
+      - --proxy-client-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+      - --requestheader-allowed-names=
+      - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem
+      - --requestheader-extra-headers-prefix=X-Remote-Extra-
+      - --requestheader-group-headers=X-Remote-Group
+      - --requestheader-username-headers=X-Remote-User
     ports:
     - containerPort: 443
       hostPort: 443

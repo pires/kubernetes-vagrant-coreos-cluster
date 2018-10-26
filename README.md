@@ -146,6 +146,10 @@ Most aspects of your cluster setup can be customized with environment variables.
 
    Defaults to `false`.
 
+ - **USE_METRICS_SERVER** defines whether to deploy or not the [Kubernetes Metrics Server](https://github.com/kubernetes-incubator/metrics-server)
+
+   Defaults to `false`.
+
  - **AUTHORIZATION_MODE** setting this to `RBAC` enables RBAC for the kubernetes cluster.
 
    Defaults to `AlwaysAllow`.
