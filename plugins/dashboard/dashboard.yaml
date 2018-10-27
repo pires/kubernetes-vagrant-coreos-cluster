@@ -15,8 +15,8 @@ metadata:
   name: kubernetes-dashboard
   namespace: kube-system
 ---
-apiVersion: apps/v1beta2
 kind: Deployment
+apiVersion: apps/v1beta2
 metadata:
   labels:
     k8s-app: kubernetes-dashboard
@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
       - name: kubernetes-dashboard
-        image: k8s.gcr.io/kubernetes-dashboard-amd64:v1.8.3
+        image: k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.0
         ports:
         - containerPort: 8443
           protocol: TCP
@@ -70,8 +70,8 @@ spec:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
 ---
-apiVersion: v1
 kind: Service
+apiVersion: v1
 metadata:
   labels:
     k8s-app: kubernetes-dashboard
