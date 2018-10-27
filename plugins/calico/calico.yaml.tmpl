@@ -1,8 +1,8 @@
-# Calico Version v3.2.3
-# https://docs.projectcalico.org/v3.2/releases#v3.2.3
+# Calico Version v3.3.0
+# https://docs.projectcalico.org/v3.3/releases#v3.3.0
 # This manifest includes the following component versions:
-#   calico/node:v3.2.3
-#   calico/cni:v3.2.3
+#   calico/node:v3.3.0
+#   calico/cni:v3.3.0
 
 # This ConfigMap is used to configure a self-hosted Calico installation.
 kind: ConfigMap
@@ -104,6 +104,7 @@ spec:
         # add-on, ensuring it gets priority scheduling and that its resources are reserved
         # if it ever gets evicted.
         scheduler.alpha.kubernetes.io/critical-pod: ''
+        cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
     spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
@@ -116,7 +117,7 @@ spec:
       # as a host-networked pod.
       serviceAccountName: calico-node
       containers:
-      - image: quay.io/calico/typha:v3.2.3
+      - image: quay.io/calico/typha:v3.3.0
         name: calico-typha
         ports:
         - containerPort: 5473
@@ -160,6 +161,23 @@ spec:
             - check
             - readiness
           periodSeconds: 10
+
+---
+
+# This manifest creates a Pod Disruption Budget for Typha to allow K8s Cluster Autoscaler to evict
+
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: calico-typha
+  namespace: kube-system
+  labels:
+    k8s-app: calico-typha
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      k8s-app: calico-typha
 
 ---
 
@@ -213,7 +231,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: calico-node
-          image: quay.io/calico/node:v3.2.3
+          image: quay.io/calico/node:v3.3.0
           env:
             # Use Kubernetes API as the backing datastore.
             - name: DATASTORE_TYPE
@@ -247,9 +265,6 @@ spec:
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
-            # Enable IP-in-IP within Felix.
-            - name: FELIX_IPINIPENABLED
-              value: "true"
             # Set MTU for tunnel device used if ipip is enabled
             - name: FELIX_IPINIPMTU
               valueFrom:
@@ -299,6 +314,9 @@ spec:
             - mountPath: /lib/modules
               name: lib-modules
               readOnly: true
+            - mountPath: /run/xtables.lock
+              name: xtables-lock
+              readOnly: false
             - mountPath: /var/run/calico
               name: var-run-calico
               readOnly: false
@@ -308,7 +326,7 @@ spec:
         # This container installs the Calico CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
-          image: quay.io/calico/cni:v3.2.3
+          image: quay.io/calico/cni:v3.3.0
           command: ["/install-cni.sh"]
           env:
             # Name of the CNI config file to create.
@@ -347,6 +365,10 @@ spec:
         - name: var-lib-calico
           hostPath:
             path: /var/lib/calico
+        - name: xtables-lock
+          hostPath:
+            path: /run/xtables.lock
+            type: FileOrCreate
         # Used to install CNI.
         - name: cni-bin-dir
           hostPath:
