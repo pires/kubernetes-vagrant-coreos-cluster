@@ -259,7 +259,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           # give setup file executable permissions
           system "chmod +x temp/setup"
 
-          system "#{__dir__}/plugins/dns/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/dns/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
+          system "#{__dir__}/plugins/coredns/deploy.sh 10.100.0.10/24 #{DNS_DOMAIN} #{__dir__}/plugins/coredns/coredns.yaml.sed > #{__dir__}/temp/coredns-deployment.yaml"
 
           # Replace __CLUSTER_CIDR__ in calico.yaml.tmpl with the value of CLUSTER_CIDR
           calicoTmpl = File.read("#{__dir__}/plugins/calico/calico.yaml.tmpl")
