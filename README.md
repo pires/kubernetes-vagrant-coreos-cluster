@@ -252,6 +252,10 @@ instead of the core functionality. To disable it, set the
 $ VAGRANT_USE_VAGRANT_TRIGGERS=false NODES=2 vagrant up
 ```
 
+#### I need to enter a `sudo` password on `vagrant up`
+
+This is your local (hosts) user password. It is needed to setup NFS.
+
 #### I'm getting errors while waiting for Kubernetes master to become ready on a MacOS host!
 
 If you see something like this in the log:
