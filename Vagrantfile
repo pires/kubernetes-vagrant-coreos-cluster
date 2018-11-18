@@ -122,6 +122,7 @@ DNS_DOMAIN = ENV["DNS_DOMAIN"] || "cluster.local"
 SERIAL_LOGGING = (ENV["SERIAL_LOGGING"].to_s.downcase == "true")
 GUI = (ENV["GUI"].to_s.downcase == "true")
 USE_KUBE_UI = (ENV["USE_KUBE_UI"].to_s.downcase == "true") || false
+USE_METRICS_SERVER = (ENV["USE_METRICS_SERVER"].to_s.downcase == "true") || false
 
 BOX_TIMEOUT_COUNT = (ENV["BOX_TIMEOUT_COUNT"] || 50).to_i
 
@@ -362,6 +363,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
             info "Kubernetes Dashboard will be available at http://#{MASTER_IP}:8080/ui/"
           end
+
+          if USE_METRICS_SERVER
+            info "Configuring Kubernetes Metrics Server..."
+
+            if OS.windows?
+              run_remote "/opt/bin/kubectl apply -f /home/core/metrics-server/"
+            else
+              system "kubectl apply -f plugins/metrics-server/"
+            end
+
+            info "Kubernetes Metrics Server will be available at http://#{MASTER_IP}:8080/apis/metrics.k8s.io/"
+          end
         end
 
         # copy setup files to master vm if host is windows
@@ -376,6 +389,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           if USE_KUBE_UI
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard-rbac.yaml"), :destination => "/home/core/dashboard-rbac.yaml"
             kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/dashboard.yaml"), :destination => "/home/core/dashboard.yaml"
+          end
+
+          if USE_METRICS_SERVER
+            kHost.vm.provision :file, :source => File.join(File.dirname(__FILE__), "plugins/dashboard/metrics-server"), :destination => "/home/core/metrics-server"
           end
         end
 
